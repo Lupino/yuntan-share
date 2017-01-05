@@ -38,17 +38,16 @@ type Summary     = Text
 type CreatedAt   = Int64
 type TablePrefix = String
 
-data Share = Share { getShareID          :: ShareID
-                   , getShareName        :: UserName
-                   , getShareFatherID    :: ShareID
-                   , getShareFather      :: Maybe Share
-                   , getShareDepth       :: Depth
-                   , getShareTotalScore  :: Score
-                   , getShareRemainScore :: Score
-                   , getSharePatchScore  :: Score
-                   , getShareCount       :: Count
-                   , getSharePatchCount  :: Count
-                   , getShareCreatedAt   :: CreatedAt
+data Share = Share { getShareID         :: ShareID
+                   , getShareName       :: UserName
+                   , getShareFatherID   :: ShareID
+                   , getShareFather     :: Maybe Share
+                   , getShareDepth      :: Depth
+                   , getShareTotalScore :: Score
+                   , getSharePatchScore :: Score
+                   , getShareCount      :: Count
+                   , getSharePatchCount :: Count
+                   , getShareCreatedAt  :: CreatedAt
                    }
 
   deriving (Generic, Eq, Show)
@@ -79,7 +78,7 @@ instance QueryResults Share where
           !getShareFather      = Nothing
           !getShareDepth       = 0
           !getShareTotalScore  = convert fd vd
-          !getSharePatchSchre  = 0
+          !getSharePatchScore  = 0
           !getShareCount       = convert fe ve
           !getSharePatchCount  = convert ff vf
           !getShareCreatedAt   = convert fg vg
