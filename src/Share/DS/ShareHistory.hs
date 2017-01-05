@@ -6,6 +6,9 @@ module Share.DS.ShareHistory
   , getShareHistory
   , countShareHistory
   , getShareHistoryList
+  , statisticShareHistory
+  , statisticShareHistoryList
+  , countStatisticShareHistory
   ) where
 
 import           Database.MySQL.Simple     (Connection, Only (..), execute,
@@ -46,4 +49,32 @@ getShareHistoryList sid from size o prefix conn = query conn sql (sid, from, siz
                                   , "WHERE `share_id` = ? "
                                   , show o
                                   , " LIMIT ?,?"
+                                  ]
+
+statisticShareHistory :: ShareID -> Int64 -> Int64 -> TablePrefix -> Connection -> IO (Maybe PatchResult)
+statisticShareHistory sid start end prefix conn = listToMaybe <$> query conn sql (sid, start, end)
+  where sql = fromString $ concat [ "SELECT SUM(`score`),COUNT(`share_id`),`share_id` "
+                                  , "FROM `", prefix, "_share_history` "
+                                  , "WHERE `share_id` = ? AND `created_at` > ? AND `created_at` < ?"
+                                  , "LIMIT 1"
+                                  ]
+
+statisticShareHistoryList :: Int64 -> Int64 -> From -> Size -> OrderBy
+                          -> TablePrefix -> Connection -> IO [PatchResult]
+statisticShareHistoryList start end from size o prefix conn = query conn sql (start, end, from, size)
+  where sql = fromString $ concat [ "SELECT SUM(`score`) as `patch_score`,COUNT(`share_id`) as `patch_count`,`share_id` "
+                                  , "FROM `", prefix, "_share_history` "
+                                  , "WHERE `created_at` > ? AND `created_at` < ? "
+                                  , "GROUP BY `share_id` "
+                                  , show o
+                                  , " LIMIT ?, ?"
+                                  ]
+
+countStatisticShareHistory :: Int64 -> Int64 -> TablePrefix -> Connection -> IO Count
+countStatisticShareHistory start end prefix conn =
+  maybe 0 fromOnly . listToMaybe <$> query conn sql (start, end)
+  where sql = fromString $ concat [ "SELECT COUNT(*) FROM "
+                                  , "(SELECT `share_id` FROM `", prefix, "_share_history` "
+                                  , "WHERE `created_at` > ? AND `created_at` < ? "
+                                  , "GROUP BY `share_id`)"
                                   ]

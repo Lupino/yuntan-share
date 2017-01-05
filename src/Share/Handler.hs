@@ -8,10 +8,13 @@ module Share.Handler
   , getShareHandler
   , getShareChildrenHandler
   , getShareHistoryHandler
+  , getSharePatchHandler
   , getShareListHandler
+  , getStatisticShareHistoryHandler
   ) where
 
 import           Control.Monad             (void, when)
+import           Control.Monad.IO.Class    (liftIO)
 import           Control.Monad.Reader      (lift)
 
 import           Dispatch.Types.ListResult (From, ListResult (..), Size,
@@ -28,10 +31,12 @@ import           Web.Scotty.Trans          (body, json, param, rescue, status,
 import           Data.Aeson                (ToJSON, Value (..), decode, object,
                                             (.=))
 import qualified Data.ByteString.Lazy      as LB (empty)
+import           Data.Int                  (Int64)
 import           Data.Maybe                (catMaybes, fromMaybe)
 import           Data.Text                 (Text, pack, unpack)
 import qualified Data.Text.Lazy            as LT (Text)
 import           Data.Traversable          (for)
+import           Data.UnixTime
 
 -- POST /api/shares/
 createShareHandler :: ActionM ()
@@ -71,9 +76,17 @@ createShareHistoryHandler = do
         getFatherList (Just (Share {getShareFather = father})) = father : getFatherList father
 
         calcShareScore :: Score -> Share -> ShareM Share
-        calcShareScore ref share@(Share { getShareDepth = depth }) = do
+        calcShareScore ref share = do
           ratio <- fromMaybe 0.0 <$> getConfig ("ratio_" ++ show depth) :: ShareM Float
-          return share { getSharePatchScore = ceiling $ fromIntegral ref * ratio }
+          let patchScore = ceiling $ fromIntegral ref * ratio
+
+          return share { getSharePatchScore = patchScore
+                       , getShareTotalScore = score + patchScore
+                       , getSharePatchCount = patchCount + 1
+                       }
+          where depth = getShareDepth share
+                score = getShareTotalScore share
+                patchCount = getSharePatchCount share
 
         saveHistory :: ShareID -> Summary -> Share -> ShareM ()
         saveHistory rid sm share = do
@@ -144,6 +157,16 @@ getShareHistoryHandler = do
                                                  , getResult = hists
                                                  }
 
+-- GET /api/shares/:name/patch/
+getSharePatchHandler :: ActionM ()
+getSharePatchHandler = do
+  share <- paramShare
+  startTime <- param "start_time" `rescue` (\_ -> return 0) :: ActionM Int64
+  endTime <- param "end_time" `rescue` (\_ -> liftIO $ read . show . toEpochTime <$> getUnixTime) :: ActionM Int64
+  case share of
+    Nothing -> shareNotFound
+    Just (Share {getShareID = fid}) -> json =<< lift (statisticShareHistory fid startTime endTime)
+
 -- GET /api/shares/
 getShareListHandler :: ActionM ()
 getShareListHandler = do
@@ -160,6 +183,28 @@ getShareListHandler = do
                                               , getSize   = size
                                               , getTotal  = total
                                               , getResult = shares
+                                              }
+
+-- GET /api/shares/statistic/
+getStatisticShareHistoryHandler :: ActionM ()
+getStatisticShareHistoryHandler = do
+  from <- param "from" `rescue` (\_ -> return (0::From))
+  size <- param "size" `rescue` (\_ -> return (10::Size))
+  startTime <- param "start_time" `rescue` (\_ -> return 0) :: ActionM Int64
+  endTime <- param "end_time" `rescue` (\_ -> liftIO $ read . show . toEpochTime <$> getUnixTime) :: ActionM Int64
+
+  patchs <- lift $ do
+    shs <- statisticShareHistoryList startTime endTime from size (desc "patch_score")
+    for shs $ \sh@(PatchResult { getPatchShareID = sid }) -> do
+      share <- getShare sid
+      return sh { getPatchShare = share }
+
+
+  total <- lift $ countStatisticShareHistory startTime endTime
+  json . fromListResult "patchs" $ ListResult { getFrom   = from
+                                              , getSize   = size
+                                              , getTotal  = total
+                                              , getResult = patchs
                                               }
 
 paramShare :: ActionM (Maybe Share)
