@@ -52,8 +52,9 @@ data ShareReq a where
   GetShareList         :: From -> Size -> OrderBy -> ShareReq [Share]
   CountShareByFather   :: ShareID -> ShareReq Int64
   GetShareListByFather :: ShareID -> From -> Size -> OrderBy -> ShareReq [Share]
-  IncrShareScore       :: ShareID -> Score -> ShareReq Score
-  IncrShareCount       :: ShareID -> Count -> ShareReq Count
+  IncrShareScore       :: ShareID -> Score -> ShareReq Int64
+  IncrShareCount       :: ShareID -> Count -> ShareReq Int64
+  IncrSharePatchCount  :: ShareID -> Count -> ShareReq Int64
   CreateShareHistory   :: ShareID -> ShareID -> Summary -> Score -> Depth -> ShareReq HistID
   GetShareHistory      :: HistID -> ShareReq (Maybe ShareHistory)
   CountShareHistory    :: ShareID -> ShareReq Int64
@@ -76,12 +77,13 @@ instance Hashable (ShareReq a) where
   hashWithSalt s (GetShareListByFather fid f si o)    = hashWithSalt s ( 7::Int, fid, f, si, o)
   hashWithSalt s (IncrShareScore sid sc)              = hashWithSalt s ( 8::Int, sid, sc)
   hashWithSalt s (IncrShareCount sid c)               = hashWithSalt s ( 9::Int, sid, c)
-  hashWithSalt s (CreateShareHistory sid rid sm sc d) = hashWithSalt s (10::Int, sid, rid, sm, sc, d)
-  hashWithSalt s (GetShareHistory hid)                = hashWithSalt s (11::Int, hid)
-  hashWithSalt s (CountShareHistory sid)              = hashWithSalt s (12::Int, sid)
-  hashWithSalt s (GetShareHistoryList sid f si o)     = hashWithSalt s (13::Int, sid, f, si, o)
-  hashWithSalt s (GetConfig key)                      = hashWithSalt s (14::Int, key)
-  hashWithSalt s (SetConfig key value)                = hashWithSalt s (15::Int, key, value)
+  hashWithSalt s (IncrSharePatchCount sid c)          = hashWithSalt s (10::Int, sid, c)
+  hashWithSalt s (CreateShareHistory sid rid sm sc d) = hashWithSalt s (11::Int, sid, rid, sm, sc, d)
+  hashWithSalt s (GetShareHistory hid)                = hashWithSalt s (12::Int, hid)
+  hashWithSalt s (CountShareHistory sid)              = hashWithSalt s (13::Int, sid)
+  hashWithSalt s (GetShareHistoryList sid f si o)     = hashWithSalt s (14::Int, sid, f, si, o)
+  hashWithSalt s (GetConfig key)                      = hashWithSalt s (15::Int, key)
+  hashWithSalt s (SetConfig key value)                = hashWithSalt s (16::Int, key, value)
 
 deriving instance Show (ShareReq a)
 instance Show1 ShareReq where show1 = show
@@ -133,6 +135,7 @@ fetchReq (CountShareByFather fid)             = countShareByFather fid
 fetchReq (GetShareListByFather fid f si o)    = getShareListByFather fid f si o
 fetchReq (IncrShareScore sid sc)              = incrShareScore sid sc
 fetchReq (IncrShareCount sid c)               = incrShareCount sid c
+fetchReq (IncrSharePatchCount sid c)          = incrSharePatchCount sid c
 fetchReq (CreateShareHistory sid rid sm sc d) = createShareHistory sid rid sm sc d
 fetchReq (GetShareHistory hid)                = getShareHistory hid
 fetchReq (CountShareHistory sid)              = countShareHistory sid

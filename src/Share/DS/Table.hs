@@ -21,6 +21,7 @@ createShareTable prefix conn = execute_ conn sql
                                   , "  `father_id` int(10) unsigned DEFAULT 0,"
                                   , "  `score` int(10) unsigned DEFAULT 0,"
                                   , "  `count` int(10) unsigned DEFAULT 0,"
+                                  , "  `patch_count` int(10) unsigned DEFAULT 0,"
                                   , "  `created_at` int(10) unsigned NOT NULL,"
                                   , "  PRIMARY KEY (`id`),"
                                   , "  UNIQUE KEY `name` (`name`),"

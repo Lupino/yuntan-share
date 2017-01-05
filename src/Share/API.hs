@@ -10,6 +10,7 @@ module Share.API
   , getShareListByFather
   , incrShareScore
   , incrShareCount
+  , incrSharePatchCount
   , createShareHistory
   , getShareHistory
   , countShareHistory
@@ -41,8 +42,9 @@ countShare           :: ShareM Int64
 getShareList         :: From -> Size -> OrderBy -> ShareM [Share]
 countShareByFather   :: ShareID -> ShareM Int64
 getShareListByFather :: ShareID -> From -> Size -> OrderBy -> ShareM [Share]
-incrShareScore       :: ShareID -> Score -> ShareM Score
-incrShareCount       :: ShareID -> Count -> ShareM Count
+incrShareScore       :: ShareID -> Score -> ShareM Int64
+incrShareCount       :: ShareID -> Count -> ShareM Int64
+incrSharePatchCount  :: ShareID -> Count -> ShareM Int64
 createShareHistory   :: ShareID -> ShareID -> Summary -> Score -> Depth -> ShareM HistID
 getShareHistory      :: HistID -> ShareM (Maybe ShareHistory)
 countShareHistory    :: ShareID -> ShareM Int64
@@ -62,6 +64,7 @@ countShareByFather fid             = dataFetch (CountShareByFather fid)
 getShareListByFather fid f si o    = dataFetch (GetShareListByFather fid f si o)
 incrShareScore sid sc              = uncachedRequest (IncrShareScore sid sc)
 incrShareCount sid c               = uncachedRequest (IncrShareCount sid c)
+incrSharePatchCount sid c          = uncachedRequest (IncrSharePatchCount sid c)
 createShareHistory sid rid sm sc d = uncachedRequest (CreateShareHistory sid rid sm sc d)
 getShareHistory hid                = dataFetch (GetShareHistory hid)
 countShareHistory sid              = dataFetch (CountShareHistory sid)

@@ -11,6 +11,7 @@ module Share.DS.Share
   , getShareListByFather
   , incrShareScore
   , incrShareCount
+  , incrSharePatchCount
   ) where
 
 import           Database.MySQL.Simple     (Connection, Only (..), execute,
@@ -61,20 +62,26 @@ getShareListByFather :: ShareID -> From -> Size -> OrderBy -> TablePrefix -> Con
 getShareListByFather fid from size o prefix conn = query conn sql (fid, from, size)
   where sql = fromString $ concat [ "SELECT * FROM `", prefix, "_shares` WHERE `father_id` = ? ", show o, " LIMIT ?,?" ]
 
-incrShareScore :: ShareID -> Score -> TablePrefix -> Connection -> IO Score
+incrShareScore :: ShareID -> Score -> TablePrefix -> Connection -> IO Int64
 incrShareScore sid score prefix conn = do
   execute conn sql (score, sid)
-  fromIntegral <$> insertID conn
   where sql = fromString $ concat [ "UPDATE `", prefix, "_shares` "
-                                  , "SET `score` = LAST_INSERT_ID(`score` + ?) "
+                                  , "SET `score` = `score` + ? "
                                   , "WHERE `id`=?"
                                   ]
 
-incrShareCount :: ShareID -> Count -> TablePrefix -> Connection -> IO Count
+incrShareCount :: ShareID -> Count -> TablePrefix -> Connection -> IO Int64
 incrShareCount sid count prefix conn = do
   execute conn sql (count, sid)
-  fromIntegral <$> insertID conn
   where sql = fromString $ concat [ "UPDATE `", prefix, "_shares` "
-                                  , "SET `count` = LAST_INSERT_ID(`count` + ?) "
+                                  , "SET `count` = `count` + ? "
+                                  , "WHERE `id`=?"
+                                  ]
+
+incrSharePatchCount :: ShareID -> Count -> TablePrefix -> Connection -> IO Int64
+incrSharePatchCount sid count prefix conn = do
+  execute conn sql (count, sid)
+  where sql = fromString $ concat [ "UPDATE `", prefix, "_shares` "
+                                  , "SET `patch_count` = `patch_count` + ? "
                                   , "WHERE `id`=?"
                                   ]

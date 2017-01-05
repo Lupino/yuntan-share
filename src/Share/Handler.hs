@@ -49,7 +49,7 @@ createShareHandler = do
 createShareHandler' :: UserName -> ShareID -> ActionM ()
 createShareHandler' name fid = do
   sid <- lift $ createShare name fid
-  lift $ incrShareCount fid 1
+  void $ lift $ incrShareCount fid 1
   json =<< lift (getShare sid)
 
 -- POST /api/shares/:name/hists/
@@ -73,16 +73,17 @@ createShareHistoryHandler = do
         calcShareScore :: Score -> Share -> ShareM Share
         calcShareScore ref share@(Share { getShareDepth = depth }) = do
           ratio <- fromMaybe 0.0 <$> getConfig ("ratio_" ++ show depth) :: ShareM Float
-          return share { getShareScore = ceiling $ fromIntegral ref * ratio }
+          return share { getSharePatchScore = ceiling $ fromIntegral ref * ratio }
 
         saveHistory :: ShareID -> Summary -> Share -> ShareM ()
         saveHistory rid sm share = do
           when (score > 0) $ do
             void $ incrShareScore fid score
+            void $ incrSharePatchCount fid 1
             void $ createShareHistory fid rid sm score depth
 
           where fid   = getShareID share
-                score = getShareScore share
+                score = getSharePatchScore share
                 depth = getShareDepth share
 
 -- POST /api/config/:key/

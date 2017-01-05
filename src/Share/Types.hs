@@ -38,14 +38,17 @@ type Summary     = Text
 type CreatedAt   = Int64
 type TablePrefix = String
 
-data Share = Share { getShareID        :: ShareID
-                   , getShareName      :: UserName
-                   , getShareFatherID  :: ShareID
-                   , getShareFather    :: Maybe Share
-                   , getShareDepth     :: Depth
-                   , getShareScore     :: Score
-                   , getShareCount     :: Count
-                   , getShareCreatedAt :: CreatedAt
+data Share = Share { getShareID          :: ShareID
+                   , getShareName        :: UserName
+                   , getShareFatherID    :: ShareID
+                   , getShareFather      :: Maybe Share
+                   , getShareDepth       :: Depth
+                   , getShareTotalScore  :: Score
+                   , getShareRemainScore :: Score
+                   , getSharePatchScore  :: Score
+                   , getShareCount       :: Count
+                   , getSharePatchCount  :: Count
+                   , getShareCreatedAt   :: CreatedAt
                    }
 
   deriving (Generic, Eq, Show)
@@ -68,16 +71,18 @@ data ShareHistory = ShareHistory { getHistID        :: HistID
 instance Hashable ShareHistory
 
 instance QueryResults Share where
-  convertResults [fa, fb, fc, fd, fe, ff]
-                 [va, vb, vc, vd, ve, vf] = Share{..}
-    where !getShareID        = convert fa va
-          !getShareName      = convert fb vb
-          !getShareFatherID  = convert fc vc
-          !getShareFather    = Nothing
-          !getShareDepth     = 0
-          !getShareScore     = convert fd vd
-          !getShareCount     = convert fe ve
-          !getShareCreatedAt = convert ff vf
+  convertResults [fa, fb, fc, fd, fe, ff, fg]
+                 [va, vb, vc, vd, ve, vf, vg] = Share{..}
+    where !getShareID          = convert fa va
+          !getShareName        = convert fb vb
+          !getShareFatherID    = convert fc vc
+          !getShareFather      = Nothing
+          !getShareDepth       = 0
+          !getShareTotalScore  = convert fd vd
+          !getSharePatchSchre  = 0
+          !getShareCount       = convert fe ve
+          !getSharePatchCount  = convert ff vf
+          !getShareCreatedAt   = convert fg vg
   convertResults fs vs  = convertError fs vs 2
 
 instance QueryResults ShareHistory where
@@ -96,13 +101,15 @@ instance QueryResults ShareHistory where
 
 
 instance ToJSON Share where
-  toJSON Share{..} = object [ "id"         .= getShareID
-                            , "name"       .= getShareName
-                            , "father_id"  .= getShareFatherID
-                            , "father"     .= getShareFather
-                            , "score"      .= getShareScore
-                            , "count"      .= getShareCount
-                            , "created_at" .= getShareCreatedAt
+  toJSON Share{..} = object [ "id"           .= getShareID
+                            , "name"         .= getShareName
+                            , "father_id"    .= getShareFatherID
+                            , "father"       .= getShareFather
+                            , "total_score"  .= getShareTotalScore
+                            , "patch_score"  .= getSharePatchScore
+                            , "count"        .= getShareCount
+                            , "patch_count"  .= getSharePatchCount
+                            , "created_at"   .= getShareCreatedAt
                             ]
 
 instance ToJSON ShareHistory where
