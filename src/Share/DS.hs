@@ -13,34 +13,33 @@ module Share.DS
   , initShareState
   ) where
 
-import           Data.Hashable                (Hashable (..))
-import           Data.Typeable                (Typeable)
-import           Haxl.Core                    (BlockedFetch (..), DataSource,
-                                               DataSourceName, Flags,
-                                               PerformFetch (..), Show1, State,
-                                               StateKey, StateStore,
-                                               dataSourceName, fetch,
-                                               putFailure, putSuccess, show1,
-                                               stateEmpty, stateSet)
+import           Data.Hashable             (Hashable (..))
+import           Data.Typeable             (Typeable)
+import           Haxl.Core                 (BlockedFetch (..), DataSource,
+                                            DataSourceName, Flags,
+                                            PerformFetch (..), Show1, State,
+                                            StateKey, StateStore,
+                                            dataSourceName, fetch, putFailure,
+                                            putSuccess, show1, stateEmpty,
+                                            stateSet)
 
-import           Dispatch.Types.ListResult    (From, Size)
-import           Dispatch.Types.OrderBy       (OrderBy)
+import           Dispatch.Types.ListResult (From, Size)
+import           Dispatch.Types.OrderBy    (OrderBy)
 import           Share.DS.Config
 import           Share.DS.Share
 import           Share.DS.ShareHistory
 import           Share.DS.Table
 import           Share.Types
-import           Share.UserEnv                (UserEnv (..))
+import           Share.UserEnv             (UserEnv (..))
 
-import qualified Control.Exception            (SomeException, bracket_, try)
-import           Data.Int                     (Int64)
-import           Data.Pool                    (Pool, withResource)
-import           Database.MySQL.Simple        (Connection)
-import           Database.MySQL.Simple.Result (Result)
+import qualified Control.Exception         (SomeException, bracket_, try)
+import           Data.Int                  (Int64)
+import           Data.Pool                 (Pool, withResource)
+import           Database.MySQL.Simple     (Connection)
 
 import           Control.Concurrent.Async
 import           Control.Concurrent.QSem
-import           Data.Maybe                   (fromJust, isJust)
+import           Data.Maybe                (fromJust, isJust)
 
 -- Data source implementation.
 
@@ -60,7 +59,7 @@ data ShareReq a where
   CountShareHistory    :: ShareID -> ShareReq Int64
   GetShareHistoryList  :: ShareID -> From -> Size -> OrderBy -> ShareReq [ShareHistory]
 
-  GetConfig            :: Result a => String -> ShareReq (Maybe a)
+  GetConfig            :: Read a => String -> ShareReq (Maybe a)
   SetConfig            :: String -> String -> ShareReq Int64
 
   deriving (Typeable)

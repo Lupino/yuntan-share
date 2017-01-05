@@ -20,17 +20,16 @@ module Share.API
   , fillFather
   ) where
 
-import           Data.Int                     (Int64)
-import           Data.Maybe                   (catMaybes)
-import           Haxl.Core                    (dataFetch, uncachedRequest)
+import           Data.Int                  (Int64)
+import           Data.Maybe                (catMaybes)
+import           Haxl.Core                 (dataFetch, uncachedRequest)
 
 import           Data.Typeable
-import           Database.MySQL.Simple.Result (Result)
-import           Dispatch.Types.ListResult    (From, Size)
-import           Dispatch.Types.OrderBy       (OrderBy)
+import           Dispatch.Types.ListResult (From, Size)
+import           Dispatch.Types.OrderBy    (OrderBy)
 import           Share.DS
 import           Share.Types
-import           Share.UserEnv                (ShareM)
+import           Share.UserEnv             (ShareM)
 
 createTable           :: ShareM Int64
 createShare          :: UserName -> ShareID -> ShareM ShareID
@@ -47,7 +46,7 @@ getShareHistory      :: HistID -> ShareM (Maybe ShareHistory)
 countShareHistory    :: ShareID -> ShareM Int64
 getShareHistoryList  :: ShareID -> From -> Size -> OrderBy -> ShareM [ShareHistory]
 
-getConfig            :: (Result a, Typeable a, Show a) => String -> ShareM (Maybe a)
+getConfig            :: (Read a, Typeable a, Show a) => String -> ShareM (Maybe a)
 setConfig            :: String -> String -> ShareM Int64
 
 createTable                        = uncachedRequest CreateTable
