@@ -59,7 +59,7 @@ data ShareReq a where
   CountShareHistory    :: ShareID -> ShareReq Int64
   GetShareHistoryList  :: ShareID -> From -> Size -> OrderBy -> ShareReq [ShareHistory]
 
-  GetConfig            :: Read a => String -> ShareReq (Maybe a)
+  GetConfig            :: String -> ShareReq String
   SetConfig            :: String -> String -> ShareReq Int64
 
   deriving (Typeable)

@@ -25,7 +25,8 @@ import           Share
 import           Web.Scotty.Trans          (body, json, param, rescue, status,
                                             text)
 
-import           Data.Aeson                (ToJSON, Value (..), decode)
+import           Data.Aeson                (ToJSON, Value (..), decode, object,
+                                            (.=))
 import qualified Data.ByteString.Lazy      as LB (empty)
 import           Data.Maybe                (catMaybes, fromMaybe)
 import           Data.Text                 (Text, pack, unpack)
@@ -96,8 +97,8 @@ saveConfigHandler = do
 getConfigHandler :: ActionM ()
 getConfigHandler = do
   key <- param "key"
-  value <- lift $ fromMaybe "" <$> getConfig key :: ActionM LT.Text
-  text value
+  value <- lift $ getConfig_ key
+  json $ object [ "value" .= value ]
 
 -- GET /api/shares/:name/
 getShareHandler :: ActionM ()

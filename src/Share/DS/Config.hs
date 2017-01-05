@@ -11,7 +11,6 @@ import           Database.MySQL.Simple (Connection, Only (..), execute, query)
 import           Data.Int              (Int64)
 import           Data.Maybe            (listToMaybe)
 import           Data.String           (fromString)
-import           Text.Read             (readMaybe)
 
 import           Share.Types
 
@@ -24,9 +23,6 @@ setConfig key value prefix conn = execute conn sql (key, value)
                                   , "(?, ?)"
                                   ]
 
-getConfig :: Read a => String -> TablePrefix -> Connection -> IO (Maybe a)
-getConfig key prefix conn = h . listToMaybe <$> query conn sql (Only key)
+getConfig :: String -> TablePrefix -> Connection -> IO String
+getConfig key prefix conn = maybe "" fromOnly . listToMaybe <$> query conn sql (Only key)
   where sql = fromString $ concat [ "SELECT `value` FROM `", prefix, "_config` WHERE `key` = ?" ]
-        h :: Read a => Maybe (Only String) -> Maybe a
-        h (Just (Only s)) = readMaybe s
-        h Nothing         = Nothing

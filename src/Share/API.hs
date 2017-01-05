@@ -16,6 +16,7 @@ module Share.API
   , getShareHistoryList
   , setConfig
   , getConfig
+  , getConfig_
 
   , fillFather
   ) where
@@ -30,6 +31,7 @@ import           Dispatch.Types.OrderBy    (OrderBy)
 import           Share.DS
 import           Share.Types
 import           Share.UserEnv             (ShareM)
+import           Text.Read                 (readMaybe)
 
 createTable           :: ShareM Int64
 createShare          :: UserName -> ShareID -> ShareM ShareID
@@ -46,7 +48,8 @@ getShareHistory      :: HistID -> ShareM (Maybe ShareHistory)
 countShareHistory    :: ShareID -> ShareM Int64
 getShareHistoryList  :: ShareID -> From -> Size -> OrderBy -> ShareM [ShareHistory]
 
-getConfig            :: (Read a, Typeable a, Show a) => String -> ShareM (Maybe a)
+getConfig            :: Read a => String -> ShareM (Maybe a)
+getConfig_           :: String -> ShareM String
 setConfig            :: String -> String -> ShareM Int64
 
 createTable                        = uncachedRequest CreateTable
@@ -64,7 +67,8 @@ getShareHistory hid                = dataFetch (GetShareHistory hid)
 countShareHistory sid              = dataFetch (CountShareHistory sid)
 getShareHistoryList sid f si o     = dataFetch (GetShareHistoryList sid f si o)
 
-getConfig key                      = dataFetch (GetConfig key)
+getConfig key                      = readMaybe <$> getConfig_ key
+getConfig_ key                     = dataFetch (GetConfig key)
 setConfig key value                = uncachedRequest (SetConfig key value)
 
 fillFather :: Depth -> Depth -> Maybe Share -> ShareM (Maybe Share)
