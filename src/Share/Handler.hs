@@ -11,7 +11,7 @@ module Share.Handler
   , getShareListHandler
   ) where
 
-import           Control.Monad             (void)
+import           Control.Monad             (void, when)
 import           Control.Monad.Reader      (lift)
 
 import           Dispatch.Types.ListResult (From, ListResult (..), Size,
@@ -76,8 +76,9 @@ createShareHistoryHandler = do
 
         saveHistory :: ShareID -> Summary -> Share -> ShareM ()
         saveHistory rid sm share = do
-          void $ incrShareScore fid score
-          void $ createShareHistory fid rid sm score depth
+          when (score > 0) $ do
+            void $ incrShareScore fid score
+            void $ createShareHistory fid rid sm score depth
 
           where fid   = getShareID share
                 score = getShareScore share
