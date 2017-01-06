@@ -133,19 +133,9 @@ data PatchResult = PatchResult { getPatchScore   :: Score
 
 instance Hashable PatchResult
 
-
-instance QueryResults PatchResult where
-  convertResults [fa, fb, fc]
-                 [va, vb, vc] = PatchResult{..}
-    where !getPatchScore   = convert fa va
-          !getPatchCount   = convert fb vb
-          !getPatchShareID = convert fc vc
-          !getPatchShare   = Nothing
-  convertResults fs vs  = convertError fs vs 2
-
 instance ToJSON PatchResult where
   toJSON PatchResult{..} = object [ "patch_score" .= getPatchScore
-                                  , "patch_cunt"  .= getPatchCount
+                                  , "patch_count"  .= getPatchCount
                                   , "share_id"    .= getPatchShareID
                                   , "share"       .= getPatchShare
                                   ]

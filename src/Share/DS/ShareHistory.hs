@@ -52,17 +52,30 @@ getShareHistoryList sid from size o prefix conn = query conn sql (sid, from, siz
                                   ]
 
 statisticShareHistory :: ShareID -> Int64 -> Int64 -> TablePrefix -> Connection -> IO (Maybe PatchResult)
-statisticShareHistory sid start end prefix conn = listToMaybe <$> query conn sql (sid, start, end)
+statisticShareHistory sid start end prefix conn = do
+  ret <- listToMaybe <$> query conn sql (sid, start, end)
+  case ret of
+    Just r  -> return . Just $ toPatchResult r
+    Nothing -> return Nothing
   where sql = fromString $ concat [ "SELECT SUM(`score`),COUNT(`share_id`),`share_id` "
                                   , "FROM `", prefix, "_share_history` "
-                                  , "WHERE `share_id` = ? AND `created_at` > ? AND `created_at` < ?"
+                                  , "WHERE `share_id` = ? AND `created_at` > ? AND `created_at` < ? "
                                   , "LIMIT 1"
                                   ]
 
+toPatchResult :: (Double, Count, ShareID) -> PatchResult
+toPatchResult (patchScore, patchCount, sid) = PatchResult { getPatchScore   = ceiling patchScore
+                                                          , getPatchCount   = patchCount
+                                                          , getPatchShareID = sid
+                                                          , getPatchShare   = Nothing
+                                                          }
+
 statisticShareHistoryList :: Int64 -> Int64 -> From -> Size -> OrderBy
                           -> TablePrefix -> Connection -> IO [PatchResult]
-statisticShareHistoryList start end from size o prefix conn = query conn sql (start, end, from, size)
-  where sql = fromString $ concat [ "SELECT SUM(`score`) as `patch_score`,COUNT(`share_id`) as `patch_count`,`share_id` "
+statisticShareHistoryList start end from size o prefix conn = do
+  ret <- query conn sql (start, end, from, size)
+  return $ map toPatchResult ret
+  where sql = fromString $ concat [ "SELECT SUM(`score`) as patch_score,COUNT(`share_id`) as patch_count,`share_id` "
                                   , "FROM `", prefix, "_share_history` "
                                   , "WHERE `created_at` > ? AND `created_at` < ? "
                                   , "GROUP BY `share_id` "
@@ -71,10 +84,11 @@ statisticShareHistoryList start end from size o prefix conn = query conn sql (st
                                   ]
 
 countStatisticShareHistory :: Int64 -> Int64 -> TablePrefix -> Connection -> IO Count
-countStatisticShareHistory start end prefix conn =
+countStatisticShareHistory start end prefix conn = do
   maybe 0 fromOnly . listToMaybe <$> query conn sql (start, end)
   where sql = fromString $ concat [ "SELECT COUNT(*) FROM "
                                   , "(SELECT `share_id` FROM `", prefix, "_share_history` "
                                   , "WHERE `created_at` > ? AND `created_at` < ? "
-                                  , "GROUP BY `share_id`)"
+                                  , "GROUP BY `share_id`) "
+                                  , "AS gp"
                                   ]
