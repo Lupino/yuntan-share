@@ -83,6 +83,7 @@ createShareHistoryHandler = do
           return share { getSharePatchScore = patchScore
                        , getShareTotalScore = score + patchScore
                        , getSharePatchCount = patchCount + 1
+                       , getShareFather     = Nothing
                        }
           where depth = getShareDepth share
                 score = getShareTotalScore share
