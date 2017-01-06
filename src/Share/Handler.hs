@@ -185,7 +185,7 @@ getShareListHandler = do
                                               , getResult = shares
                                               }
 
--- GET /api/shares/statistic/
+-- GET /api/statistic/
 getStatisticShareHistoryHandler :: ActionM ()
 getStatisticShareHistoryHandler = do
   from <- param "from" `rescue` (\_ -> return (0::From))

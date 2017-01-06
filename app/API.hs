@@ -115,7 +115,7 @@ application = do
   post "/api/config/:key/"         saveConfigHandler
   get  "/api/config/:key/"         getConfigHandler
   get  "/api/shares/"              getShareListHandler
-  get  "/api/shares/statistic/"    getStatisticShareHistoryHandler
+  get  "/api/statistic/"           getStatisticShareHistoryHandler
   get  "/api/shares/:name/"        getShareHandler
   get  "/api/shares/:name/childs/" getShareChildrenHandler
   get  "/api/shares/:name/hists/"  getShareHistoryHandler
