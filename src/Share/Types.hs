@@ -17,6 +17,7 @@ module Share.Types
   , Share (..)
   , ShareHistory (..)
   , PatchResult (..)
+  , patchResult
   ) where
 
 import           Database.MySQL.Simple.QueryResults (QueryResults, convertError,
@@ -135,7 +136,14 @@ instance Hashable PatchResult
 
 instance ToJSON PatchResult where
   toJSON PatchResult{..} = object [ "patch_score" .= getPatchScore
-                                  , "patch_count"  .= getPatchCount
+                                  , "patch_count" .= getPatchCount
                                   , "share_id"    .= getPatchShareID
                                   , "share"       .= getPatchShare
                                   ]
+
+patchResult :: ShareID -> PatchResult
+patchResult getPatchShareID = PatchResult { getPatchScore = 0
+                                          , getPatchCount = 0
+                                          , getPatchShare = Nothing
+                                          , ..
+                                          }

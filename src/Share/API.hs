@@ -26,7 +26,7 @@ module Share.API
   ) where
 
 import           Data.Int                  (Int64)
-import           Data.Maybe                (catMaybes)
+import           Data.Maybe                (catMaybes, fromMaybe)
 import           Haxl.Core                 (dataFetch, uncachedRequest)
 
 import           Data.Typeable
@@ -52,7 +52,7 @@ createShareHistory         :: ShareID -> ShareID -> Summary -> Score -> Depth ->
 getShareHistory            :: HistID -> ShareM (Maybe ShareHistory)
 countShareHistory          :: ShareID -> ShareM Int64
 getShareHistoryList        :: ShareID -> From -> Size -> OrderBy -> ShareM [ShareHistory]
-statisticShareHistory      :: ShareID -> Int64 -> Int64 -> ShareM (Maybe PatchResult)
+statisticShareHistory      :: ShareID -> Int64 -> Int64 -> ShareM PatchResult
 statisticShareHistoryList  :: Int64 -> Int64 -> From -> Size -> OrderBy -> ShareM [PatchResult]
 countStatisticShareHistory :: Int64 -> Int64 -> ShareM Count
 
@@ -75,7 +75,7 @@ createShareHistory sid rid sm sc d     = uncachedRequest (CreateShareHistory sid
 getShareHistory hid                    = dataFetch (GetShareHistory hid)
 countShareHistory sid                  = dataFetch (CountShareHistory sid)
 getShareHistoryList sid f si o         = dataFetch (GetShareHistoryList sid f si o)
-statisticShareHistory sid st ed        = dataFetch (StatisticShareHistory sid st ed)
+statisticShareHistory sid st ed        = fromMaybe (patchResult sid) <$> dataFetch (StatisticShareHistory sid st ed)
 statisticShareHistoryList st ed f si o = dataFetch (StatisticShareHistoryList st ed f si o)
 countStatisticShareHistory st ed       = dataFetch (CountStatisticShareHistory st ed)
 

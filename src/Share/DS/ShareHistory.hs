@@ -23,6 +23,8 @@ import           Dispatch.Types.ListResult (From, Size)
 import           Dispatch.Types.OrderBy    (OrderBy)
 import           Share.Types
 
+import           Control.Exception         (SomeException, handle)
+
 createShareHistory :: ShareID -> ShareID -> Summary -> Score -> Depth -> TablePrefix -> Connection -> IO HistID
 createShareHistory sid srcid summary score depth prefix conn = do
   t <- getUnixTime
@@ -52,7 +54,7 @@ getShareHistoryList sid from size o prefix conn = query conn sql (sid, from, siz
                                   ]
 
 statisticShareHistory :: ShareID -> Int64 -> Int64 -> TablePrefix -> Connection -> IO (Maybe PatchResult)
-statisticShareHistory sid start end prefix conn = do
+statisticShareHistory sid start end prefix conn = handle errNothing $ do
   ret <- listToMaybe <$> query conn sql (sid, start, end)
   case ret of
     Just r  -> return . Just $ toPatchResult r
@@ -62,6 +64,9 @@ statisticShareHistory sid start end prefix conn = do
                                   , "WHERE `share_id` = ? AND `created_at` > ? AND `created_at` < ? "
                                   , "LIMIT 1"
                                   ]
+
+        errNothing :: SomeException -> IO (Maybe PatchResult)
+        errNothing _ = return Nothing
 
 toPatchResult :: (Double, Count, ShareID) -> PatchResult
 toPatchResult (patchScore, patchCount, sid) = PatchResult { getPatchScore   = ceiling patchScore
