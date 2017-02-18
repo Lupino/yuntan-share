@@ -17,10 +17,10 @@ import           Data.Hashable             (Hashable (..))
 import           Data.Typeable             (Typeable)
 import           Haxl.Core                 (BlockedFetch (..), DataSource,
                                             DataSourceName, Flags,
-                                            PerformFetch (..), Show1, State,
+                                            PerformFetch (..), ShowP, State,
                                             StateKey, StateStore,
                                             dataSourceName, fetch, putFailure,
-                                            putSuccess, show1, stateEmpty,
+                                            putSuccess, showp, stateEmpty,
                                             stateSet)
 
 import           Dispatch.Types.ListResult (From, Size)
@@ -92,7 +92,7 @@ instance Hashable (ShareReq a) where
   hashWithSalt s (SetConfig key value)                    = hashWithSalt s (19::Int, key, value)
 
 deriving instance Show (ShareReq a)
-instance Show1 ShareReq where show1 = show
+instance ShowP ShareReq where showp = show
 
 instance StateKey ShareReq where
   data State ShareReq = ShareState { numThreads :: Int }

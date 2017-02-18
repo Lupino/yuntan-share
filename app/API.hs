@@ -22,6 +22,7 @@ import           Share.Handler
 import qualified Data.Yaml                            as Y
 import qualified Share.Config                         as C
 
+import           Data.Semigroup                       ((<>))
 import           Options.Applicative
 
 data Options = Options { getConfigFile  :: String
