@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-7.14
+resolver: lts-8.0
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -37,14 +37,18 @@ resolver: lts-7.14
 # will not be run. This is useful for tweaking upstream packages.
 packages:
 - '.'
-- '../dispatch-common'
+- location:
+    git: https://github.com/Lupino/dispatch-common.git
+    commit: 65ec8aa2d591857ea8ada5c8d5457a16f53174f9
+- location:
+    git: https://github.com/Lupino/influxdb-haskell.git
+    commit: fedb8f8a8d733ab98cd4a6774ea5f0c077d75a1e
+- location:
+    git: https://github.com/Lupino/graphql-haskell.git
+    commit: 3be86bf69e0825c2df65862479d663b08f60e8ce
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps:
-- mysql-simple-0.4.0.0
-- mysql-0.1.4
-- haxl-0.4.0.1
-- yaml-config-0.4.0
+# extra-deps:
 
 # Override default flag values for local packages and extra-deps
 flags: {}
