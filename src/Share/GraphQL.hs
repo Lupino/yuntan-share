@@ -13,11 +13,11 @@ import           Data.GraphQL.AST       (Name)
 import           Data.GraphQL.Schema    (Argument (..), Resolver, Schema (..),
                                          Value (..), arrayA', object', objectA',
                                          scalar, scalarA)
-import           Data.Int               (Int32)
+import           Data.Maybe             (fromMaybe)
 import           Data.Text              (unpack)
 import           Data.UnixTime
 import           Dispatch.Types.OrderBy (desc)
-import           Dispatch.Utils.GraphQL (getValue, value, value')
+import           Dispatch.Utils.GraphQL (getIntValue, value, value')
 import           Haxl.Core.Monad        (unsafeLiftIO)
 import           Share.API
 import           Share.Types
@@ -59,8 +59,8 @@ father n fid = object' n $ maybe [] share_ <$> getShare fid
 
 children :: Name -> ShareID -> Resolver ShareM
 children n fid = arrayA' n $ \ argv -> do
-  let from = fromIntegral . getInt 0  $ getValue "from" argv
-      size = fromIntegral . getInt 10 $ getValue "size" argv
+  let from = fromMaybe 0  $ getIntValue "from" argv
+      size = fromMaybe 10 $ getIntValue "size" argv
 
   map share_ <$> getShareListByFather fid from size (desc "id")
 
@@ -71,8 +71,8 @@ childrenCount n fid = scalarA n $ \case
 
 history :: Name -> ShareID -> Resolver ShareM
 history n fid = arrayA' n $ \ argv -> do
-  let from = fromIntegral . getInt 0  $ getValue "from" argv
-      size = fromIntegral . getInt 10 $ getValue "size" argv
+  let from = fromMaybe 0  $ getIntValue "from" argv
+      size = fromMaybe 10 $ getIntValue "size" argv
 
   map record <$> getShareHistoryList fid from size (desc "id")
 
@@ -95,9 +95,8 @@ historyCount n fid = scalarA n $ \case
 
 patch :: Name -> ShareID -> Resolver ShareM
 patch n fid = objectA' n $ \ argv -> do
-  defaultEndTime <- unsafeLiftIO $ read . show . toEpochTime <$> getUnixTime
-  let startTime = fromIntegral . getInt 0 $ getValue "start_time" argv
-      endTime   = fromIntegral . getInt defaultEndTime $ getValue "end_time" argv
+  endTime <- flip fromMaybe (getIntValue "end_time" argv) <$> now
+  let startTime = fromMaybe 0 $ getIntValue "start_time" argv
 
   patch_ <$> statisticShareHistory fid startTime endTime
 
@@ -110,26 +109,24 @@ patch_ PatchResult {..} = [ scalar "patch_score" getPatchScore
 
 statistic :: Resolver ShareM
 statistic = arrayA' "statistic" $ \ argv -> do
-  defaultEndTime <- unsafeLiftIO $ read . show . toEpochTime <$> getUnixTime
-  let startTime = fromIntegral . getInt 0 $ getValue "start_time" argv
-      endTime   = fromIntegral . getInt defaultEndTime $ getValue "end_time" argv
-      from      = fromIntegral . getInt 0 $ getValue "from" argv
-      size      = fromIntegral . getInt 10 $ getValue "size" argv
+  endTime <- flip fromMaybe (getIntValue "end_time" argv) <$> now
+  let startTime = fromMaybe 0 $ getIntValue "start_time" argv
+      from = fromMaybe 0  $ getIntValue "from" argv
+      size = fromMaybe 10 $ getIntValue "size" argv
 
   map patch_ <$> statisticShareHistoryList startTime endTime from size (desc "patch_score")
 
 statisticCount :: Resolver ShareM
 statisticCount = scalarA "statistic_count" $ \ argv -> do
-  defaultEndTime <- unsafeLiftIO $ read . show . toEpochTime <$> getUnixTime
-  let startTime = fromIntegral . getInt 0 $ getValue "start_time" argv
-      endTime   = fromIntegral . getInt defaultEndTime $ getValue "end_time" argv
+  endTime <- flip fromMaybe (getIntValue "end_time" argv) <$> now
+  let startTime = fromMaybe 0 $ getIntValue "start_time" argv
 
   countStatisticShareHistory startTime endTime
 
 shares :: Resolver ShareM
 shares = arrayA' "shares" $ \ argv -> do
-  let from = fromIntegral . getInt 0  $ getValue "from" argv
-      size = fromIntegral . getInt 10 $ getValue "size" argv
+  let from = fromMaybe 0  $ getIntValue "from" argv
+      size = fromMaybe 10 $ getIntValue "size" argv
   map share_ <$> getShareList from size (desc "id")
 
 shareCount :: Resolver ShareM
@@ -137,7 +134,5 @@ shareCount = scalarA "share_count" $ \ case
   [] -> countShare
   _  -> empty
 
-getInt :: Int32 -> Maybe Value -> Int32
-getInt v Nothing             = v
-getInt _ (Just (ValueInt v)) = v
-getInt v _                   = v
+now :: Read a => ShareM a
+now = unsafeLiftIO $ read . show . toEpochTime <$> getUnixTime
