@@ -11,6 +11,7 @@ module Share.Handler
   , getSharePatchHandler
   , getShareListHandler
   , getStatisticShareHistoryHandler
+  , graphqlHandler
   ) where
 
 import           Control.Monad             (void, when)
@@ -37,6 +38,10 @@ import           Data.Text                 (Text, pack, unpack)
 import qualified Data.Text.Lazy            as LT (Text)
 import           Data.Traversable          (for)
 import           Data.UnixTime
+
+import           Data.GraphQL              (graphql)
+import           Share.GraphQL             (schema)
+
 
 -- POST /api/shares/
 createShareHandler :: ActionM ()
@@ -224,3 +229,8 @@ resultOK = json $ ok "OK"
 
 shareNotFound :: ActionM ()
 shareNotFound = status status404 >> json (err "Share not found.")
+
+graphqlHandler :: ActionM ()
+graphqlHandler = do
+  query <- param "query"
+  json =<< lift (graphql schema query)

@@ -103,3 +103,6 @@ application = do
   get  "/api/shares/:name/childs/" getShareChildrenHandler
   get  "/api/shares/:name/hists/"  getShareHistoryHandler
   get  "/api/shares/:name/patch/"  getSharePatchHandler
+
+  get  "/api/graphql/" graphqlHandler
+  post "/api/graphql/" graphqlHandler
