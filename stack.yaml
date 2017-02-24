@@ -39,19 +39,24 @@ packages:
 - '.'
 - location:
     git: https://github.com/Lupino/dispatch-common.git
-    commit: 65ec8aa2d591857ea8ada5c8d5457a16f53174f9
-- location:
-    git: https://github.com/Lupino/influxdb-haskell.git
-    commit: fedb8f8a8d733ab98cd4a6774ea5f0c077d75a1e
+    commit: 70fda0666770ca6c8a64e4322f762a2ac26b9e4d
+  extra-dep: true
 - location:
     git: https://github.com/Lupino/graphql-haskell.git
     commit: 3be86bf69e0825c2df65862479d663b08f60e8ce
+  extra-dep: true
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 # extra-deps:
 
 # Override default flag values for local packages and extra-deps
-flags: {}
+flags:
+  dispatch-common:
+    list-result-type: true
+    order-by-type: true
+    mysql-config: true
+    graphql-utils: true
+    scotty-utils: true
 
 # Extra package databases containing global packages
 extra-package-dbs: []
