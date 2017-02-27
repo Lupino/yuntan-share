@@ -11,8 +11,9 @@ module Share.DS.ShareHistory
   , countStatisticShareHistory
   ) where
 
+import           Control.Monad             (void)
 import           Database.MySQL.Simple     (Connection, Only (..), execute,
-                                            insertID, query, query_)
+                                            insertID, query)
 
 import           Data.Int                  (Int64)
 import           Data.Maybe                (listToMaybe)
@@ -28,7 +29,7 @@ import           Control.Exception         (SomeException, handle)
 createShareHistory :: ShareID -> ShareID -> Summary -> Score -> Depth -> TablePrefix -> Connection -> IO HistID
 createShareHistory sid srcid summary score depth prefix conn = do
   t <- getUnixTime
-  execute conn sql (sid, srcid, summary, score, depth, show $ toEpochTime t)
+  void $ execute conn sql (sid, srcid, summary, score, depth, show $ toEpochTime t)
   fromIntegral <$> insertID conn
 
   where sql = fromString $ concat [ "INSERT INTO `", prefix, "_share_history` "

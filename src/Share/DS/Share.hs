@@ -14,6 +14,7 @@ module Share.DS.Share
   , incrSharePatchCount
   ) where
 
+import           Control.Monad             (void)
 import           Database.MySQL.Simple     (Connection, Only (..), execute,
                                             insertID, query, query_)
 
@@ -29,7 +30,7 @@ import           Share.Types
 createShare :: UserName -> ShareID -> TablePrefix -> Connection -> IO ShareID
 createShare name fid prefix conn = do
   t <- getUnixTime
-  execute conn sql (name, fid, show $ toEpochTime t)
+  void $ execute conn sql (name, fid, show $ toEpochTime t)
   fromIntegral <$> insertID conn
 
   where sql = fromString $ concat [ "INSERT INTO `", prefix, "_shares` "

@@ -22,20 +22,14 @@ import           Dispatch.Types.ListResult (From, ListResult (..), Size,
                                             fromListResult)
 import           Dispatch.Types.OrderBy    (desc)
 import           Dispatch.Types.Result     (err, ok)
-import           Dispatch.Utils.JSON       (differenceValue, unionValue)
 import           Dispatch.Utils.Scotty     (maybeNotFound)
-import           Network.HTTP.Types        (status400, status404)
+import           Network.HTTP.Types        (status404)
 import           Share
-import           Web.Scotty.Trans          (body, json, param, rescue, status,
-                                            text)
+import           Web.Scotty.Trans          (json, param, rescue, status)
 
-import           Data.Aeson                (ToJSON, Value (..), decode, object,
-                                            (.=))
-import qualified Data.ByteString.Lazy      as LB (empty)
+import           Data.Aeson                (object, (.=))
 import           Data.Int                  (Int64)
 import           Data.Maybe                (catMaybes, fromMaybe)
-import           Data.Text                 (Text, pack, unpack)
-import qualified Data.Text.Lazy            as LT (Text)
 import           Data.Traversable          (for)
 import           Data.UnixTime
 

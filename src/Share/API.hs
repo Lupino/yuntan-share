@@ -26,10 +26,9 @@ module Share.API
   ) where
 
 import           Data.Int                  (Int64)
-import           Data.Maybe                (catMaybes, fromMaybe)
+import           Data.Maybe                (fromMaybe)
 import           Haxl.Core                 (dataFetch, uncachedRequest)
 
-import           Data.Typeable
 import           Dispatch.Types.ListResult (From, Size)
 import           Dispatch.Types.OrderBy    (OrderBy)
 import           Share.DS

@@ -8,7 +8,6 @@ module Share.GraphQL
   ) where
 
 import           Control.Applicative    (Alternative (..))
-import qualified Data.Aeson             as A (Value (..))
 import           Data.GraphQL.AST       (Name)
 import           Data.GraphQL.Schema    (Argument (..), Resolver, Schema (..),
                                          Value (..), arrayA', object', objectA',
@@ -17,7 +16,7 @@ import           Data.Maybe             (fromMaybe)
 import           Data.Text              (unpack)
 import           Data.UnixTime
 import           Dispatch.Types.OrderBy (desc)
-import           Dispatch.Utils.GraphQL (getIntValue, value, value')
+import           Dispatch.Utils.GraphQL (getIntValue)
 import           Haxl.Core.Monad        (unsafeLiftIO)
 import           Share.API
 import           Share.Types

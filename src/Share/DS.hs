@@ -18,10 +18,8 @@ import           Data.Typeable             (Typeable)
 import           Haxl.Core                 (BlockedFetch (..), DataSource,
                                             DataSourceName, Flags,
                                             PerformFetch (..), ShowP, State,
-                                            StateKey, StateStore,
-                                            dataSourceName, fetch, putFailure,
-                                            putSuccess, showp, stateEmpty,
-                                            stateSet)
+                                            StateKey, dataSourceName, fetch,
+                                            putFailure, putSuccess, showp)
 
 import           Dispatch.Types.ListResult (From, Size)
 import           Dispatch.Types.OrderBy    (OrderBy)
@@ -34,12 +32,11 @@ import           Share.UserEnv             (UserEnv (..))
 
 import qualified Control.Exception         (SomeException, bracket_, try)
 import           Data.Int                  (Int64)
-import           Data.Pool                 (Pool, withResource)
+import           Data.Pool                 (withResource)
 import           Database.MySQL.Simple     (Connection)
 
 import           Control.Concurrent.Async
 import           Control.Concurrent.QSem
-import           Data.Maybe                (fromJust, isJust)
 
 -- Data source implementation.
 

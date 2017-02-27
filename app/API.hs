@@ -9,9 +9,8 @@ import           Data.Default.Class                   (def)
 import           Data.Streaming.Network.Internal      (HostPreference (Host))
 import           Network.Wai.Handler.Warp             (setHost, setPort)
 import           Network.Wai.Middleware.RequestLogger (logStdout)
-import           Web.Scotty.Trans                     (delete, get, middleware,
-                                                       post, scottyOptsT,
-                                                       settings)
+import           Web.Scotty.Trans                     (get, middleware, post,
+                                                       scottyOptsT, settings)
 
 import           Haxl.Core                            (StateStore, initEnv,
                                                        runHaxl, stateEmpty,
@@ -61,25 +60,24 @@ main = execParser opts >>= program
      <> header "dispatch-user - Share micro server" )
 
 program :: Options -> IO ()
-program opts = do
-  (Just conf) <- Y.decodeFile (getConfigFile opts) :: IO (Maybe C.Config)
-  let serverHost   = getHost opts
-      serverPort   = getPort opts
-
-      mysqlConfig  = C.mysqlConfig conf
+program Options { getConfigFile  = confFile
+                , getTablePrefix = prefix
+                , getHost        = host
+                , getPort        = port
+                } = do
+  (Just conf) <- Y.decodeFile confFile :: IO (Maybe C.Config)
+  let mysqlConfig  = C.mysqlConfig conf
       mysqlThreads = C.mysqlHaxlNumThreads mysqlConfig
 
-      tablePrefix  = getTablePrefix opts
 
-
-  mySQLPool <- C.genMySQLPool mysqlConfig
+  pool <- C.genMySQLPool mysqlConfig
 
   let state = stateSet (initShareState mysqlThreads) stateEmpty
 
-  let userEnv = UserEnv { mySQLPool = mySQLPool, tablePrefix = tablePrefix }
+  let userEnv = UserEnv { mySQLPool = pool, tablePrefix = prefix }
 
-  let opts = def { settings = setPort serverPort
-                            $ setHost (Host serverHost) (settings def) }
+  let opts = def { settings = setPort port
+                            $ setHost (Host host) (settings def) }
 
   _ <- runIO userEnv state createTable
   scottyOptsT opts (runIO userEnv state) application
