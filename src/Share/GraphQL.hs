@@ -9,9 +9,10 @@ module Share.GraphQL
 
 import           Control.Applicative    (Alternative (..))
 import           Data.GraphQL.AST       (Name)
-import           Data.GraphQL.Schema    (Argument (..), Resolver, Schema (..),
+import           Data.GraphQL.Schema    (Argument (..), Resolver, Schema,
                                          Value (..), arrayA', object', objectA',
                                          scalar, scalarA)
+import           Data.List.NonEmpty     (NonEmpty ((:|)))
 import           Data.Maybe             (fromMaybe)
 import           Data.Text              (unpack)
 import           Data.UnixTime
@@ -23,7 +24,7 @@ import           Share.Types
 import           Share.UserEnv          (ShareM)
 
 schema :: Schema ShareM
-schema = Schema [config, share, statistic, statisticCount, shares, shareCount]
+schema = config :| [share, statistic, statisticCount, shares, shareCount]
 
 config :: Resolver ShareM
 config = scalarA "config" $ \case
