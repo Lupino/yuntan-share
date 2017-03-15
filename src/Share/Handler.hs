@@ -18,16 +18,13 @@ import           Control.Monad             (void, when)
 import           Control.Monad.IO.Class    (liftIO)
 import           Control.Monad.Reader      (lift)
 
-import           Dispatch.Types.ListResult (From, ListResult (..), Size,
-                                            fromListResult)
+import           Dispatch.Types.ListResult (From, ListResult (..), Size)
 import           Dispatch.Types.OrderBy    (desc)
-import           Dispatch.Types.Result     (err, ok)
-import           Dispatch.Utils.Scotty     (maybeNotFound)
-import           Network.HTTP.Types        (status404)
+import           Dispatch.Utils.Scotty     (errNotFound, maybeNotFound, ok,
+                                            okListResult)
 import           Share
-import           Web.Scotty.Trans          (json, param, rescue, status)
+import           Web.Scotty.Trans          (json, param, rescue)
 
-import           Data.Aeson                (object, (.=))
 import           Data.Int                  (Int64)
 import           Data.Maybe                (catMaybes, fromMaybe)
 import           Data.Traversable          (for)
@@ -112,7 +109,7 @@ getConfigHandler :: ActionM ()
 getConfigHandler = do
   key <- param "key"
   value <- lift $ getConfig_ key
-  json $ object [ "value" .= value ]
+  ok "value" value
 
 -- GET /api/shares/:name/
 getShareHandler :: ActionM ()
@@ -130,11 +127,11 @@ getShareChildrenHandler = do
     Just (Share {getShareID = fid}) -> do
       childs <- lift $ getShareListByFather fid from size (desc "id")
       total <- lift $ countShareByFather fid
-      json . fromListResult "childs" $ ListResult { getFrom   = from
-                                                  , getSize   = size
-                                                  , getTotal  = total
-                                                  , getResult = childs
-                                                  }
+      okListResult "childs" ListResult { getFrom   = from
+                                       , getSize   = size
+                                       , getTotal  = total
+                                       , getResult = childs
+                                       }
 
 -- GET /api/shares/:name/hists/
 getShareHistoryHandler :: ActionM ()
@@ -151,11 +148,11 @@ getShareHistoryHandler = do
           src <- getShare $ getHistSrcID ht
           return ht { getHistSrc = src }
       total <- lift $ countShareHistory fid
-      json . fromListResult "hists" $ ListResult { getFrom   = from
-                                                 , getSize   = size
-                                                 , getTotal  = total
-                                                 , getResult = hists
-                                                 }
+      okListResult "hists" ListResult { getFrom   = from
+                                      , getSize   = size
+                                      , getTotal  = total
+                                      , getResult = hists
+                                      }
 
 -- GET /api/shares/:name/patch/
 getSharePatchHandler :: ActionM ()
@@ -179,11 +176,11 @@ getShareListHandler = do
       fillFather 0 maxDepth $ Just sh
 
   total <- lift countShare
-  json . fromListResult "shares" $ ListResult { getFrom   = from
-                                              , getSize   = size
-                                              , getTotal  = total
-                                              , getResult = shares
-                                              }
+  okListResult "shares" ListResult { getFrom   = from
+                                   , getSize   = size
+                                   , getTotal  = total
+                                   , getResult = shares
+                                   }
 
 -- GET /api/statistic/
 getStatisticShareHistoryHandler :: ActionM ()
@@ -201,11 +198,11 @@ getStatisticShareHistoryHandler = do
 
 
   total <- lift $ countStatisticShareHistory startTime endTime
-  json . fromListResult "patchs" $ ListResult { getFrom   = from
-                                              , getSize   = size
-                                              , getTotal  = total
-                                              , getResult = patchs
-                                              }
+  okListResult "patchs" ListResult { getFrom   = from
+                                   , getSize   = size
+                                   , getTotal  = total
+                                   , getResult = patchs
+                                   }
 
 paramShare :: ActionM (Maybe Share)
 paramShare = do
@@ -219,10 +216,10 @@ paramShare' = do
   lift (fillFather 0 maxDepth =<< getShareByName name)
 
 resultOK :: ActionM ()
-resultOK = json $ ok "OK"
+resultOK = ok "result" ("OK" :: String)
 
 shareNotFound :: ActionM ()
-shareNotFound = status status404 >> json (err "Share not found.")
+shareNotFound = errNotFound "Share not found."
 
 graphqlHandler :: ActionM ()
 graphqlHandler = do
