@@ -1,8 +1,8 @@
-name:                dispatch-share
+name:                yuntan-share
 version:             0.1.0.0
 synopsis:            Initial project template from stack
 description:         Please see README.md
-homepage:            https://github.com/Lupino/dispatch-share#readme
+homepage:            https://github.com/Lupino/yuntan-share#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Li Meng Jun
@@ -33,7 +33,7 @@ library
                      , aeson
                      , text
                      , unix-time
-                     , dispatch-common
+                     , yuntan-common
                      , haxl
                      , resource-pool
                      , async
@@ -45,12 +45,12 @@ library
                      , graphql
   default-language:    Haskell2010
 
-executable dispatch-share
+executable yuntan-share
   hs-source-dirs:      app
   main-is:             API.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
-                     , dispatch-share
+                     , yuntan-share
                      , optparse-applicative
                      , scotty
                      , haxl
@@ -62,15 +62,15 @@ executable dispatch-share
                      , text
   default-language:    Haskell2010
 
-test-suite dispatch-share-test
+test-suite yuntan-share-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
   build-depends:       base
-                     , dispatch-share
+                     , yuntan-share
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
 source-repository head
   type:     git
-  location: https://github.com/Lupino/dispatch-share
+  location: https://github.com/Lupino/yuntan-share

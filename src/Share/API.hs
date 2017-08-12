@@ -29,8 +29,8 @@ import           Data.Int                  (Int64)
 import           Data.Maybe                (fromMaybe)
 import           Haxl.Core                 (dataFetch, uncachedRequest)
 
-import           Dispatch.Types.ListResult (From, Size)
-import           Dispatch.Types.OrderBy    (OrderBy)
+import           Yuntan.Types.ListResult (From, Size)
+import           Yuntan.Types.OrderBy    (OrderBy)
 import           Share.DS
 import           Share.Types
 import           Share.UserEnv             (ShareM)

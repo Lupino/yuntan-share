@@ -16,8 +16,8 @@ import           Data.List.NonEmpty     (NonEmpty ((:|)))
 import           Data.Maybe             (fromMaybe)
 import           Data.Text              (unpack)
 import           Data.UnixTime
-import           Dispatch.Types.OrderBy (desc)
-import           Dispatch.Utils.GraphQL (getIntValue)
+import           Yuntan.Types.OrderBy (desc)
+import           Yuntan.Utils.GraphQL (getIntValue)
 import           Haxl.Core.Monad        (unsafeLiftIO)
 import           Share.API
 import           Share.Types

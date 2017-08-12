@@ -18,9 +18,9 @@ import           Control.Monad             (void, when)
 import           Control.Monad.IO.Class    (liftIO)
 import           Control.Monad.Reader      (lift)
 
-import           Dispatch.Types.ListResult (From, ListResult (..), Size)
-import           Dispatch.Types.OrderBy    (desc)
-import           Dispatch.Utils.Scotty     (errNotFound, maybeNotFound, ok,
+import           Yuntan.Types.ListResult (From, ListResult (..), Size)
+import           Yuntan.Types.OrderBy    (desc)
+import           Yuntan.Utils.Scotty     (errNotFound, maybeNotFound, ok,
                                             okListResult)
 import           Share
 import           Web.Scotty.Trans          (json, param, rescue)

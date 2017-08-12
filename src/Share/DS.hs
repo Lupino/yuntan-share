@@ -21,8 +21,8 @@ import           Haxl.Core                 (BlockedFetch (..), DataSource,
                                             StateKey, dataSourceName, fetch,
                                             putFailure, putSuccess, showp)
 
-import           Dispatch.Types.ListResult (From, Size)
-import           Dispatch.Types.OrderBy    (OrderBy)
+import           Yuntan.Types.ListResult (From, Size)
+import           Yuntan.Types.OrderBy    (OrderBy)
 import           Share.DS.Config
 import           Share.DS.Share
 import           Share.DS.ShareHistory

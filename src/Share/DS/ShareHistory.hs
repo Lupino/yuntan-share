@@ -20,8 +20,8 @@ import           Data.Maybe                (listToMaybe)
 import           Data.String               (fromString)
 import           Data.UnixTime
 
-import           Dispatch.Types.ListResult (From, Size)
-import           Dispatch.Types.OrderBy    (OrderBy)
+import           Yuntan.Types.ListResult (From, Size)
+import           Yuntan.Types.OrderBy    (OrderBy)
 import           Share.Types
 
 import           Control.Exception         (SomeException, handle)
