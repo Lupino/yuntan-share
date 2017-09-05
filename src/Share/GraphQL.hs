@@ -23,6 +23,47 @@ import           Share.API
 import           Share.Types
 import           Share.UserEnv          (ShareM)
 
+--  type Query {
+--    config(name: String!): String
+--    share(name: String!): Share
+--    statistic(start_time: Int, end_time: Int, from: Int, size: Int): [PatchResult]
+--    statistic_count(start_time: Int, end_time: Int): Int
+--    shares(from: Int, size: Int): [Share]
+--    share_count: Int
+--  }
+--  type Share {
+--    id: Int
+--    name: String
+--    father_id: Int
+--    father: Share
+--    children(from: Int, size: Int): [Share]
+--    children_count: Int
+--    history(from: Int, size: Int): [ShareHistory]
+--    history_count: Int
+--    statistic(start_time: Int, end_time: Int): PatchResult
+--    total_score: Int
+--    count: Int
+--    patch_count: Int
+--    created_at: Int
+--  }
+--  type ShareHistory {
+--    id: Int
+--    share_id: Int
+--    share: Share
+--    src_id: Int
+--    src: Share
+--    summary: String
+--    score: Int
+--    depth: Int
+--    created_at: Int
+--  }
+--  type PatchResult {
+--    patch_score: Int
+--    patch_count: Int
+--    share_id: Int
+--    share: Share
+--  }
+
 schema :: Schema ShareM
 schema = config :| [share, statistic, statisticCount, shares, shareCount]
 
