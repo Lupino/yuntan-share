@@ -25,39 +25,39 @@ module Share.API
   , fillFather
   ) where
 
-import           Data.Int                  (Int64)
-import           Data.Maybe                (fromMaybe)
-import           Haxl.Core                 (dataFetch, uncachedRequest)
+import           Data.Int                (Int64)
+import           Data.Maybe              (fromMaybe)
+import           Haxl.Core               (GenHaxl, dataFetch, uncachedRequest)
+import           Yuntan.Types.HasMySQL   (HasMySQL)
 
-import           Yuntan.Types.ListResult (From, Size)
-import           Yuntan.Types.OrderBy    (OrderBy)
 import           Share.DS
 import           Share.Types
-import           Share.UserEnv             (ShareM)
-import           Text.Read                 (readMaybe)
+import           Text.Read               (readMaybe)
+import           Yuntan.Types.ListResult (From, Size)
+import           Yuntan.Types.OrderBy    (OrderBy)
 
-createTable                :: ShareM Int64
-createShare                :: UserName -> ShareID -> ShareM ShareID
-getShare                   :: ShareID -> ShareM (Maybe Share)
-getShareByName             :: UserName -> ShareM (Maybe Share)
-countShare                 :: ShareM Int64
-getShareList               :: From -> Size -> OrderBy -> ShareM [Share]
-countShareByFather         :: ShareID -> ShareM Int64
-getShareListByFather       :: ShareID -> From -> Size -> OrderBy -> ShareM [Share]
-incrShareScore             :: ShareID -> Score -> ShareM Int64
-incrShareCount             :: ShareID -> Count -> ShareM Int64
-incrSharePatchCount        :: ShareID -> Count -> ShareM Int64
-createShareHistory         :: ShareID -> ShareID -> Summary -> Score -> Depth -> ShareM HistID
-getShareHistory            :: HistID -> ShareM (Maybe ShareHistory)
-countShareHistory          :: ShareID -> ShareM Int64
-getShareHistoryList        :: ShareID -> From -> Size -> OrderBy -> ShareM [ShareHistory]
-statisticShareHistory      :: ShareID -> Int64 -> Int64 -> ShareM PatchResult
-statisticShareHistoryList  :: Int64 -> Int64 -> From -> Size -> OrderBy -> ShareM [PatchResult]
-countStatisticShareHistory :: Int64 -> Int64 -> ShareM Count
+createTable                :: HasMySQL u => GenHaxl u Int64
+createShare                :: HasMySQL u => UserName -> ShareID -> GenHaxl u ShareID
+getShare                   :: HasMySQL u => ShareID -> GenHaxl u (Maybe Share)
+getShareByName             :: HasMySQL u => UserName -> GenHaxl u (Maybe Share)
+countShare                 :: HasMySQL u => GenHaxl u Int64
+getShareList               :: HasMySQL u => From -> Size -> OrderBy -> GenHaxl u [Share]
+countShareByFather         :: HasMySQL u => ShareID -> GenHaxl u Int64
+getShareListByFather       :: HasMySQL u => ShareID -> From -> Size -> OrderBy -> GenHaxl u [Share]
+incrShareScore             :: HasMySQL u => ShareID -> Score -> GenHaxl u Int64
+incrShareCount             :: HasMySQL u => ShareID -> Count -> GenHaxl u Int64
+incrSharePatchCount        :: HasMySQL u => ShareID -> Count -> GenHaxl u Int64
+createShareHistory         :: HasMySQL u => ShareID -> ShareID -> Summary -> Score -> Depth -> GenHaxl u HistID
+getShareHistory            :: HasMySQL u => HistID -> GenHaxl u (Maybe ShareHistory)
+countShareHistory          :: HasMySQL u => ShareID -> GenHaxl u Int64
+getShareHistoryList        :: HasMySQL u => ShareID -> From -> Size -> OrderBy -> GenHaxl u [ShareHistory]
+statisticShareHistory      :: HasMySQL u => ShareID -> Int64 -> Int64 -> GenHaxl u PatchResult
+statisticShareHistoryList  :: HasMySQL u => Int64 -> Int64 -> From -> Size -> OrderBy -> GenHaxl u [PatchResult]
+countStatisticShareHistory :: HasMySQL u => Int64 -> Int64 -> GenHaxl u Count
 
-getConfig                  :: Read a => String -> ShareM (Maybe a)
-getConfig_                 :: String -> ShareM String
-setConfig                  :: String -> String -> ShareM Int64
+getConfig                  :: (HasMySQL u, Read a) => String -> GenHaxl u (Maybe a)
+getConfig_                 :: HasMySQL u => String -> GenHaxl u String
+setConfig                  :: HasMySQL u => String -> String -> GenHaxl u Int64
 
 createTable                            = uncachedRequest CreateTable
 createShare un sid                     = uncachedRequest (CreateShare un sid)
@@ -82,7 +82,7 @@ getConfig key                          = readMaybe <$> getConfig_ key
 getConfig_ key                         = dataFetch (GetConfig key)
 setConfig key value                    = uncachedRequest (SetConfig key value)
 
-fillFather :: Depth -> Depth -> Maybe Share -> ShareM (Maybe Share)
+fillFather :: HasMySQL u => Depth -> Depth -> Maybe Share -> GenHaxl u (Maybe Share)
 fillFather _ _ Nothing          = return Nothing
 fillFather depth maxDepth (Just share) =
   if depth < maxDepth && fid > 0 then do

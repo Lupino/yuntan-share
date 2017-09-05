@@ -13,27 +13,27 @@ module Share.DS
   , initShareState
   ) where
 
-import           Data.Hashable             (Hashable (..))
-import           Data.Typeable             (Typeable)
-import           Haxl.Core                 (BlockedFetch (..), DataSource,
-                                            DataSourceName, Flags,
-                                            PerformFetch (..), ShowP, State,
-                                            StateKey, dataSourceName, fetch,
-                                            putFailure, putSuccess, showp)
+import           Data.Hashable            (Hashable (..))
+import           Data.Typeable            (Typeable)
+import           Haxl.Core                (BlockedFetch (..), DataSource,
+                                           DataSourceName, Flags,
+                                           PerformFetch (..), ShowP, State,
+                                           StateKey, dataSourceName, fetch,
+                                           putFailure, putSuccess, showp)
 
-import           Yuntan.Types.ListResult (From, Size)
-import           Yuntan.Types.OrderBy    (OrderBy)
 import           Share.DS.Config
 import           Share.DS.Share
 import           Share.DS.ShareHistory
 import           Share.DS.Table
 import           Share.Types
-import           Share.UserEnv             (UserEnv (..))
+import           Yuntan.Types.HasMySQL    (HasMySQL, mysqlPool, tablePrefix)
+import           Yuntan.Types.ListResult  (From, Size)
+import           Yuntan.Types.OrderBy     (OrderBy)
 
-import qualified Control.Exception         (SomeException, bracket_, try)
-import           Data.Int                  (Int64)
-import           Data.Pool                 (withResource)
-import           Database.MySQL.Simple     (Connection)
+import qualified Control.Exception        (SomeException, bracket_, try)
+import           Data.Int                 (Int64)
+import           Data.Pool                (withResource)
+import           Database.MySQL.Simple    (Connection)
 
 import           Control.Concurrent.Async
 import           Control.Concurrent.QSem
@@ -97,13 +97,14 @@ instance StateKey ShareReq where
 instance DataSourceName ShareReq where
   dataSourceName _ = "ShareDataSource"
 
-instance DataSource UserEnv ShareReq where
+instance HasMySQL u => DataSource u ShareReq where
   fetch = shareFetch
 
 shareFetch
-  :: State ShareReq
+  :: HasMySQL u
+  => State ShareReq
   -> Flags
-  -> UserEnv
+  -> u
   -> [BlockedFetch ShareReq]
   -> PerformFetch
 
@@ -113,11 +114,11 @@ shareFetch _state _flags _user blockedFetches = AsyncFetch $ \inner -> do
   inner
   mapM_ wait asyncs
 
-fetchAsync :: QSem -> UserEnv -> BlockedFetch ShareReq -> IO (Async ())
+fetchAsync :: HasMySQL u => QSem -> u -> BlockedFetch ShareReq -> IO (Async ())
 fetchAsync sem env req = async $
   Control.Exception.bracket_ (waitQSem sem) (signalQSem sem) $ withResource pool $ fetchSync req prefix
 
-  where pool   = mySQLPool env
+  where pool   = mysqlPool env
         prefix = tablePrefix env
 
 fetchSync :: BlockedFetch ShareReq -> TablePrefix -> Connection -> IO ()
@@ -150,4 +151,4 @@ fetchReq (GetConfig key)                          = getConfig key
 fetchReq (SetConfig key value)                    = setConfig key value
 
 initShareState :: Int -> State ShareReq
-initShareState threads = ShareState threads
+initShareState = ShareState
