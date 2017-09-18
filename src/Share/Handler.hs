@@ -14,28 +14,30 @@ module Share.Handler
   , graphqlHandler
   ) where
 
-import           Control.Monad             (void, when)
-import           Control.Monad.IO.Class    (liftIO)
-import           Control.Monad.Reader      (lift)
+import           Control.Monad           (void, when)
+import           Control.Monad.IO.Class  (liftIO)
+import           Control.Monad.Reader    (lift)
 
+import           Haxl.Core               (GenHaxl)
+import           Share
+import           Web.Scotty.Trans        (json, param, rescue)
+import           Yuntan.Types.HasMySQL   (HasMySQL)
 import           Yuntan.Types.ListResult (From, ListResult (..), Size)
 import           Yuntan.Types.OrderBy    (desc)
-import           Yuntan.Utils.Scotty     (errNotFound, maybeNotFound, ok,
-                                            okListResult)
-import           Share
-import           Web.Scotty.Trans          (json, param, rescue)
+import           Yuntan.Utils.Scotty     (ActionH, errNotFound, maybeNotFound,
+                                          ok, okListResult)
 
-import           Data.Int                  (Int64)
-import           Data.Maybe                (catMaybes, fromMaybe)
-import           Data.Traversable          (for)
+import           Data.Int                (Int64)
+import           Data.Maybe              (catMaybes, fromMaybe)
+import           Data.Traversable        (for)
 import           Data.UnixTime
 
-import           Data.GraphQL              (graphql)
-import           Share.GraphQL             (schema)
+import           Data.GraphQL            (graphql)
+import           Share.GraphQL           (schema)
 
 
 -- POST /api/shares/
-createShareHandler :: ActionM ()
+createShareHandler :: HasMySQL u => ActionH u ()
 createShareHandler = do
   name <- param "name"
   fname <- param "sharename"
@@ -47,14 +49,14 @@ createShareHandler = do
       createShareHandler' name fid
     Just (Share { getShareID = fid }) -> createShareHandler' name fid
 
-createShareHandler' :: UserName -> ShareID -> ActionM ()
+createShareHandler' :: HasMySQL u => UserName -> ShareID -> ActionH u ()
 createShareHandler' name fid = do
   sid <- lift $ createShare name fid
   void $ lift $ incrShareCount fid 1
   json =<< lift (getShare sid)
 
 -- POST /api/shares/:name/hists/
-createShareHistoryHandler :: ActionM ()
+createShareHistoryHandler :: HasMySQL u => ActionH u ()
 createShareHistoryHandler = do
   score <- param "score"
   sm <- param "summary"
@@ -71,9 +73,9 @@ createShareHistoryHandler = do
         getFatherList Nothing                                  = []
         getFatherList (Just (Share {getShareFather = father})) = father : getFatherList father
 
-        calcShareScore :: Score -> Share -> ShareM Share
+        calcShareScore :: HasMySQL u => Score -> Share -> GenHaxl u Share
         calcShareScore ref share = do
-          ratio <- fromMaybe 0.0 <$> getConfig ("ratio_" ++ show depth) :: ShareM Float
+          ratio <- fromMaybe 0.0 <$> getConfig ("ratio_" ++ show depth)
           let patchScore = ceiling $ fromIntegral ref * ratio
 
           return share { getSharePatchScore = patchScore
@@ -85,7 +87,7 @@ createShareHistoryHandler = do
                 score = getShareTotalScore share
                 patchCount = getSharePatchCount share
 
-        saveHistory :: ShareID -> Summary -> Share -> ShareM ()
+        saveHistory :: HasMySQL u => ShareID -> Summary -> Share -> GenHaxl u ()
         saveHistory rid sm share = do
           when (score > 0) $ do
             void $ incrShareScore fid score
@@ -97,7 +99,7 @@ createShareHistoryHandler = do
                 depth = getShareDepth share
 
 -- POST /api/config/:key/
-saveConfigHandler :: ActionM ()
+saveConfigHandler :: HasMySQL u => ActionH u ()
 saveConfigHandler = do
   key <- param "key"
   value <- param "value"
@@ -105,19 +107,19 @@ saveConfigHandler = do
   resultOK
 
 -- GET /api/config/:key/
-getConfigHandler :: ActionM ()
+getConfigHandler :: HasMySQL u => ActionH u ()
 getConfigHandler = do
   key <- param "key"
   value <- lift $ getConfig_ key
   ok "value" value
 
 -- GET /api/shares/:name/
-getShareHandler :: ActionM ()
+getShareHandler :: HasMySQL u => ActionH u ()
 getShareHandler = do
   maybeNotFound "Share" =<< paramShare'
 
 -- GET /api/shares/:name/childs/
-getShareChildrenHandler :: ActionM ()
+getShareChildrenHandler :: HasMySQL u => ActionH u ()
 getShareChildrenHandler = do
   from <- param "from" `rescue` (\_ -> return (0::From))
   size <- param "size" `rescue` (\_ -> return (10::Size))
@@ -134,7 +136,7 @@ getShareChildrenHandler = do
                                        }
 
 -- GET /api/shares/:name/hists/
-getShareHistoryHandler :: ActionM ()
+getShareHistoryHandler :: HasMySQL u => ActionH u ()
 getShareHistoryHandler = do
   from <- param "from" `rescue` (\_ -> return (0::From))
   size <- param "size" `rescue` (\_ -> return (10::Size))
@@ -155,24 +157,24 @@ getShareHistoryHandler = do
                                       }
 
 -- GET /api/shares/:name/patch/
-getSharePatchHandler :: ActionM ()
+getSharePatchHandler :: HasMySQL u => ActionH u ()
 getSharePatchHandler = do
   share <- paramShare
-  startTime <- param "start_time" `rescue` (\_ -> return 0) :: ActionM Int64
-  endTime <- param "end_time" `rescue` (\_ -> liftIO $ read . show . toEpochTime <$> getUnixTime) :: ActionM Int64
+  startTime <- param "start_time" `rescue` (\_ -> return 0) :: ActionH u Int64
+  endTime <- param "end_time" `rescue` (\_ -> liftIO $ read . show . toEpochTime <$> getUnixTime) :: ActionH u Int64
   case share of
     Nothing -> shareNotFound
     Just (Share {getShareID = fid}) -> json =<< lift (statisticShareHistory fid startTime endTime)
 
 -- GET /api/shares/
-getShareListHandler :: ActionM ()
+getShareListHandler :: HasMySQL u => ActionH u ()
 getShareListHandler = do
   from <- param "from" `rescue` (\_ -> return (0::From))
   size <- param "size" `rescue` (\_ -> return (10::Size))
   shares <- lift $ catMaybes <$> do
     shs <- getShareList from size (desc "id")
     for shs $ \sh -> do
-      maxDepth <- fromMaybe 0 <$> getConfig "max_depth" :: ShareM Depth
+      maxDepth <- fromMaybe 0 <$> getConfig "max_depth"
       fillFather 0 maxDepth $ Just sh
 
   total <- lift countShare
@@ -183,12 +185,12 @@ getShareListHandler = do
                                    }
 
 -- GET /api/statistic/
-getStatisticShareHistoryHandler :: ActionM ()
+getStatisticShareHistoryHandler :: HasMySQL u => ActionH u ()
 getStatisticShareHistoryHandler = do
   from <- param "from" `rescue` (\_ -> return (0::From))
   size <- param "size" `rescue` (\_ -> return (10::Size))
-  startTime <- param "start_time" `rescue` (\_ -> return 0) :: ActionM Int64
-  endTime <- param "end_time" `rescue` (\_ -> liftIO $ read . show . toEpochTime <$> getUnixTime) :: ActionM Int64
+  startTime <- param "start_time" `rescue` (\_ -> return 0) :: ActionH u Int64
+  endTime <- param "end_time" `rescue` (\_ -> liftIO $ read . show . toEpochTime <$> getUnixTime) :: ActionH u Int64
 
   patchs <- lift $ do
     shs <- statisticShareHistoryList startTime endTime from size (desc "patch_score")
@@ -204,24 +206,24 @@ getStatisticShareHistoryHandler = do
                                    , getResult = patchs
                                    }
 
-paramShare :: ActionM (Maybe Share)
+paramShare :: HasMySQL u => ActionH u (Maybe Share)
 paramShare = do
   name <- param "name"
   lift $ getShareByName name
 
-paramShare' :: ActionM (Maybe Share)
+paramShare' :: HasMySQL u => ActionH u (Maybe Share)
 paramShare' = do
   name <- param "name"
-  maxDepth <- lift $ fromMaybe 0 <$> getConfig "max_depth" :: ActionM Depth
+  maxDepth <- lift $ fromMaybe 0 <$> getConfig "max_depth" :: HasMySQL u => ActionH u Depth
   lift (fillFather 0 maxDepth =<< getShareByName name)
 
-resultOK :: ActionM ()
+resultOK :: ActionH u ()
 resultOK = ok "result" ("OK" :: String)
 
-shareNotFound :: ActionM ()
+shareNotFound :: ActionH u ()
 shareNotFound = errNotFound "Share not found."
 
-graphqlHandler :: ActionM ()
+graphqlHandler :: HasMySQL u => ActionH u ()
 graphqlHandler = do
   query <- param "query"
   json =<< lift (graphql schema query)
