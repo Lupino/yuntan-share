@@ -8,12 +8,12 @@ module Share.Config
   , genMySQLPool
   ) where
 
-import           Data.Aeson                  (FromJSON, parseJSON, withObject,
-                                              (.:))
+import           Data.Aeson                (FromJSON, parseJSON, withObject,
+                                            (.:))
 
 import           Yuntan.Config.MySQLConfig (MySQLConfig (..), genMySQLPool)
 
-data Config = Config { mysqlConfig :: MySQLConfig
+newtype Config = Config { mysqlConfig :: MySQLConfig
                      }
   deriving (Show)
 

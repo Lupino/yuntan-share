@@ -11,20 +11,20 @@ module Share.DS.ShareHistory
   , countStatisticShareHistory
   ) where
 
-import           Control.Monad             (void)
-import           Database.MySQL.Simple     (Connection, Only (..), execute,
-                                            insertID, query)
+import           Control.Monad           (void)
+import           Database.MySQL.Simple   (Connection, Only (..), execute,
+                                          insertID, query)
 
-import           Data.Int                  (Int64)
-import           Data.Maybe                (listToMaybe)
-import           Data.String               (fromString)
+import           Data.Int                (Int64)
+import           Data.Maybe              (listToMaybe)
+import           Data.String             (fromString)
 import           Data.UnixTime
 
+import           Share.Types
 import           Yuntan.Types.ListResult (From, Size)
 import           Yuntan.Types.OrderBy    (OrderBy)
-import           Share.Types
 
-import           Control.Exception         (SomeException, handle)
+import           Control.Exception       (SomeException, handle)
 
 createShareHistory :: ShareID -> ShareID -> Summary -> Score -> Depth -> TablePrefix -> Connection -> IO HistID
 createShareHistory sid srcid summary score depth prefix conn = do
@@ -90,7 +90,7 @@ statisticShareHistoryList start end from size o prefix conn = do
                                   ]
 
 countStatisticShareHistory :: Int64 -> Int64 -> TablePrefix -> Connection -> IO Count
-countStatisticShareHistory start end prefix conn = do
+countStatisticShareHistory start end prefix conn =
   maybe 0 fromOnly . listToMaybe <$> query conn sql (start, end)
   where sql = fromString $ concat [ "SELECT COUNT(*) FROM "
                                   , "(SELECT `share_id` FROM `", prefix, "_share_history` "

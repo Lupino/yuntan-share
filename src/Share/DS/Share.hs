@@ -14,18 +14,18 @@ module Share.DS.Share
   , incrSharePatchCount
   ) where
 
-import           Control.Monad             (void)
-import           Database.MySQL.Simple     (Connection, Only (..), execute,
-                                            insertID, query, query_)
+import           Control.Monad           (void)
+import           Database.MySQL.Simple   (Connection, Only (..), execute,
+                                          insertID, query, query_)
 
-import           Data.Int                  (Int64)
-import           Data.Maybe                (listToMaybe)
-import           Data.String               (fromString)
+import           Data.Int                (Int64)
+import           Data.Maybe              (listToMaybe)
+import           Data.String             (fromString)
 import           Data.UnixTime
 
+import           Share.Types
 import           Yuntan.Types.ListResult (From, Size)
 import           Yuntan.Types.OrderBy    (OrderBy)
-import           Share.Types
 
 createShare :: UserName -> ShareID -> TablePrefix -> Connection -> IO ShareID
 createShare name fid prefix conn = do
@@ -64,7 +64,7 @@ getShareListByFather fid from size o prefix conn = query conn sql (fid, from, si
   where sql = fromString $ concat [ "SELECT * FROM `", prefix, "_shares` WHERE `father_id` = ? ", show o, " LIMIT ?,?" ]
 
 incrShareScore :: ShareID -> Score -> TablePrefix -> Connection -> IO Int64
-incrShareScore sid score prefix conn = do
+incrShareScore sid score prefix conn =
   execute conn sql (score, sid)
   where sql = fromString $ concat [ "UPDATE `", prefix, "_shares` "
                                   , "SET `score` = `score` + ? "
@@ -72,7 +72,7 @@ incrShareScore sid score prefix conn = do
                                   ]
 
 incrShareCount :: ShareID -> Count -> TablePrefix -> Connection -> IO Int64
-incrShareCount sid count prefix conn = do
+incrShareCount sid count prefix conn =
   execute conn sql (count, sid)
   where sql = fromString $ concat [ "UPDATE `", prefix, "_shares` "
                                   , "SET `count` = `count` + ? "
@@ -80,7 +80,7 @@ incrShareCount sid count prefix conn = do
                                   ]
 
 incrSharePatchCount :: ShareID -> Count -> TablePrefix -> Connection -> IO Int64
-incrSharePatchCount sid count prefix conn = do
+incrSharePatchCount sid count prefix conn =
   execute conn sql (count, sid)
   where sql = fromString $ concat [ "UPDATE `", prefix, "_shares` "
                                   , "SET `patch_count` = `patch_count` + ? "
