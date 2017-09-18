@@ -23,7 +23,6 @@ library
                      , Share.DS.Config
                      , Share.DS
                      , Share.API
-                     , Share.UserEnv
                      , Share.Handler
                      , Share.Config
                      , Share.GraphQL
