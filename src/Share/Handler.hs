@@ -24,8 +24,9 @@ import           Web.Scotty.Trans        (json, param, rescue)
 import           Yuntan.Types.HasMySQL   (HasMySQL)
 import           Yuntan.Types.ListResult (From, ListResult (..), Size)
 import           Yuntan.Types.OrderBy    (desc)
-import           Yuntan.Utils.Scotty     (ActionH, errNotFound, maybeNotFound,
-                                          ok, okListResult)
+import           Yuntan.Types.Scotty     (ActionH)
+import           Yuntan.Utils.Scotty     (errNotFound, maybeNotFound, ok,
+                                          okListResult)
 
 import           Data.Int                (Int64)
 import           Data.Maybe              (catMaybes, fromMaybe)
