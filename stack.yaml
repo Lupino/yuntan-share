@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-8.0
+resolver: lts-10.2
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -39,8 +39,17 @@ packages:
 - '.'
 - location:
     git: https://github.com/Lupino/yuntan-common.git
-    commit: b17dde04a4ade852385213118d71ac78fedae659
+    commit: 2ec5bf2176f327da715016ee4d93cc317870b9d5
   extra-dep: true
+  subdirs:
+  - yuntan-common-scotty
+  - yuntan-common-scotty-type
+  - yuntan-common-graphql
+  - yuntan-common-config-mysql
+  - yuntan-common-list-result
+  - yuntan-common-result
+  - yuntan-common-json
+  - yuntan-common-order
 - location:
     git: https://github.com/jdnavarro/graphql-haskell.git
     commit: 40f9024b51900c73bc0f65444c16022bd73820be
@@ -50,14 +59,7 @@ packages:
 # extra-deps:
 
 # Override default flag values for local packages and extra-deps
-flags:
-  yuntan-common:
-    list-result-type: true
-    order-by-type: true
-    mysql-config: true
-    graphql-utils: true
-    scotty-utils: true
-    scotty-type: true
+# flags: {}
 
 # Extra package databases containing global packages
 extra-package-dbs: []
