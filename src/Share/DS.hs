@@ -104,12 +104,11 @@ shareFetch
   => State ShareReq
   -> Flags
   -> u
-  -> [BlockedFetch ShareReq]
-  -> PerformFetch
+  -> PerformFetch ShareReq
 
-shareFetch _state _flags _user blockedFetches = AsyncFetch $ \inner -> do
+shareFetch _state _flags _user = AsyncFetch $ \reqs inner -> do
   sem <- newQSem $ numThreads _state
-  asyncs <- mapM (fetchAsync sem _user) blockedFetches
+  asyncs <- mapM (fetchAsync sem _user) reqs
   inner
   mapM_ wait asyncs
 
