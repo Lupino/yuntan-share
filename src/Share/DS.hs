@@ -42,6 +42,7 @@ import           Control.Concurrent.QSem
 data ShareReq a where
   CreateTable                :: ShareReq Int64
   CreateShare                :: UserName -> ShareID -> ShareReq ShareID
+  UpdateShare                :: ShareID -> ShareID -> ShareReq ()
   GetShare                   :: ShareID -> ShareReq (Maybe Share)
   GetShareByName             :: UserName -> ShareReq (Maybe Share)
   CountShare                 :: ShareReq Int64
@@ -67,25 +68,26 @@ data ShareReq a where
 deriving instance Eq (ShareReq a)
 instance Hashable (ShareReq a) where
   hashWithSalt s CreateTable                              = hashWithSalt s ( 0::Int)
-  hashWithSalt s (CreateShare un sid)                     = hashWithSalt s ( 1::Int, un, sid)
-  hashWithSalt s (GetShare sid)                           = hashWithSalt s ( 2::Int, sid)
-  hashWithSalt s (GetShareByName un)                      = hashWithSalt s ( 3::Int, un)
-  hashWithSalt s CountShare                               = hashWithSalt s ( 4::Int)
-  hashWithSalt s (GetShareList f si o)                    = hashWithSalt s ( 5::Int, f, si, o)
-  hashWithSalt s (CountShareByFather fid)                 = hashWithSalt s ( 6::Int, fid)
-  hashWithSalt s (GetShareListByFather fid f si o)        = hashWithSalt s ( 7::Int, fid, f, si, o)
-  hashWithSalt s (IncrShareScore sid sc)                  = hashWithSalt s ( 8::Int, sid, sc)
-  hashWithSalt s (IncrShareCount sid c)                   = hashWithSalt s ( 9::Int, sid, c)
-  hashWithSalt s (IncrSharePatchCount sid c)              = hashWithSalt s (10::Int, sid, c)
-  hashWithSalt s (CreateShareHistory sid rid sm sc d)     = hashWithSalt s (11::Int, sid, rid, sm, sc, d)
-  hashWithSalt s (GetShareHistory hid)                    = hashWithSalt s (12::Int, hid)
-  hashWithSalt s (CountShareHistory sid)                  = hashWithSalt s (13::Int, sid)
-  hashWithSalt s (GetShareHistoryList sid f si o)         = hashWithSalt s (14::Int, sid, f, si, o)
-  hashWithSalt s (StatisticShareHistory sid st ed)        = hashWithSalt s (15::Int, sid, st, ed)
-  hashWithSalt s (StatisticShareHistoryList st ed f si o) = hashWithSalt s (16::Int, st, ed, f, si, o)
-  hashWithSalt s (CountStatisticShareHistory st ed)       = hashWithSalt s (17::Int, st, ed)
-  hashWithSalt s (GetConfig key)                          = hashWithSalt s (18::Int, key)
-  hashWithSalt s (SetConfig key value)                    = hashWithSalt s (19::Int, key, value)
+  hashWithSalt s (CreateShare un fid)                     = hashWithSalt s ( 1::Int, un, fid)
+  hashWithSalt s (UpdateShare sid fid)                    = hashWithSalt s ( 2::Int, sid, fid)
+  hashWithSalt s (GetShare sid)                           = hashWithSalt s ( 3::Int, sid)
+  hashWithSalt s (GetShareByName un)                      = hashWithSalt s ( 4::Int, un)
+  hashWithSalt s CountShare                               = hashWithSalt s ( 5::Int)
+  hashWithSalt s (GetShareList f si o)                    = hashWithSalt s ( 6::Int, f, si, o)
+  hashWithSalt s (CountShareByFather fid)                 = hashWithSalt s ( 7::Int, fid)
+  hashWithSalt s (GetShareListByFather fid f si o)        = hashWithSalt s ( 8::Int, fid, f, si, o)
+  hashWithSalt s (IncrShareScore sid sc)                  = hashWithSalt s ( 9::Int, sid, sc)
+  hashWithSalt s (IncrShareCount sid c)                   = hashWithSalt s (10::Int, sid, c)
+  hashWithSalt s (IncrSharePatchCount sid c)              = hashWithSalt s (11::Int, sid, c)
+  hashWithSalt s (CreateShareHistory sid rid sm sc d)     = hashWithSalt s (12::Int, sid, rid, sm, sc, d)
+  hashWithSalt s (GetShareHistory hid)                    = hashWithSalt s (13::Int, hid)
+  hashWithSalt s (CountShareHistory sid)                  = hashWithSalt s (14::Int, sid)
+  hashWithSalt s (GetShareHistoryList sid f si o)         = hashWithSalt s (15::Int, sid, f, si, o)
+  hashWithSalt s (StatisticShareHistory sid st ed)        = hashWithSalt s (16::Int, sid, st, ed)
+  hashWithSalt s (StatisticShareHistoryList st ed f si o) = hashWithSalt s (17::Int, st, ed, f, si, o)
+  hashWithSalt s (CountStatisticShareHistory st ed)       = hashWithSalt s (18::Int, st, ed)
+  hashWithSalt s (GetConfig key)                          = hashWithSalt s (19::Int, key)
+  hashWithSalt s (SetConfig key value)                    = hashWithSalt s (20::Int, key, value)
 
 deriving instance Show (ShareReq a)
 instance ShowP ShareReq where showp = show
@@ -128,7 +130,8 @@ fetchSync (BlockedFetch req rvar) prefix conn = do
 
 fetchReq :: ShareReq a -> TablePrefix -> Connection -> IO a
 fetchReq CreateTable                              = createTable
-fetchReq (CreateShare un sid)                     = createShare un sid
+fetchReq (CreateShare un fid)                     = createShare un fid
+fetchReq (UpdateShare sid fid)                    = updateShare sid fid
 fetchReq (GetShare sid)                           = getShare sid
 fetchReq (GetShareByName un)                      = getShareByName un
 fetchReq CountShare                               = countShare

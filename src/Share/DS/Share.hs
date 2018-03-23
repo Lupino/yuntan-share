@@ -3,6 +3,7 @@
 module Share.DS.Share
   (
     createShare
+  , updateShare
   , getShare
   , getShareByName
   , countShare
@@ -39,6 +40,15 @@ createShare name fid prefix conn = do
                                   , "(?, ?, ?)"
                                   ]
 
+updateShare :: ShareID -> ShareID -> TablePrefix -> Connection -> IO ()
+updateShare sid fid prefix conn = do
+  void $ execute conn sql (fid, sid)
+
+  where sql = fromString $ concat [ "UPDATE `", prefix, "_shares` "
+                                  , "SET `father_id` = ? "
+                                  , "WHERE `id` = ?"
+                                  ]
+
 getShare :: ShareID -> TablePrefix -> Connection -> IO (Maybe Share)
 getShare sid prefix conn = listToMaybe <$> query conn sql (Only sid)
   where sql = fromString $ concat [ "SELECT * FROM `", prefix, "_shares` WHERE `id`=?"]
@@ -73,11 +83,15 @@ incrShareScore sid score prefix conn =
 
 incrShareCount :: ShareID -> Count -> TablePrefix -> Connection -> IO Int64
 incrShareCount sid count prefix conn =
-  execute conn sql (count, sid)
+  execute conn sql (abs count, sid)
   where sql = fromString $ concat [ "UPDATE `", prefix, "_shares` "
-                                  , "SET `count` = `count` + ? "
+                                  , "SET `count` = `count` " ++ op ++ " ? "
                                   , "WHERE `id`=?"
                                   ]
+
+        op | count < 0 = "-"
+           | otherwise = "+"
+
 
 incrSharePatchCount :: ShareID -> Count -> TablePrefix -> Connection -> IO Int64
 incrSharePatchCount sid count prefix conn =

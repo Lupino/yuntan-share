@@ -52,9 +52,19 @@ createShareHandler = do
 
 createShareHandler' :: HasMySQL u => UserName -> ShareID -> ActionH u ()
 createShareHandler' name fid = do
-  sid <- lift $ createShare name fid
-  void $ lift $ incrShareCount fid 1
-  json =<< lift (getShare sid)
+  old <- lift $ getShareByName name
+  case old of
+    Nothing -> do
+      sid <- lift $ createShare name fid
+      void $ lift $ incrShareCount fid 1
+      json =<< lift (getShare sid)
+    Just Share{getShareID = sid, getShareFatherID = fid'} -> do
+      when (fid' /= fid) $ do
+        lift $ updateShare sid fid
+        void $ lift $ incrShareCount fid 1
+        void $ lift $ incrShareCount fid' $ negate 1
+      json =<< lift (getShare sid)
+
 
 -- POST /api/shares/:name/hists/
 createShareHistoryHandler :: HasMySQL u => ActionH u ()

@@ -2,6 +2,7 @@ module Share.API
   (
     createTable
   , createShare
+  , updateShare
   , getShare
   , getShareByName
   , countShare
@@ -38,6 +39,7 @@ import           Yuntan.Types.OrderBy    (OrderBy)
 
 createTable                :: HasMySQL u => GenHaxl u Int64
 createShare                :: HasMySQL u => UserName -> ShareID -> GenHaxl u ShareID
+updateShare                :: HasMySQL u => ShareID -> ShareID -> GenHaxl u ()
 getShare                   :: HasMySQL u => ShareID -> GenHaxl u (Maybe Share)
 getShareByName             :: HasMySQL u => UserName -> GenHaxl u (Maybe Share)
 countShare                 :: HasMySQL u => GenHaxl u Int64
@@ -61,6 +63,7 @@ setConfig                  :: HasMySQL u => String -> String -> GenHaxl u Int64
 
 createTable                            = uncachedRequest CreateTable
 createShare un sid                     = uncachedRequest (CreateShare un sid)
+updateShare sid fid                    = uncachedRequest (UpdateShare sid fid)
 getShare sid                           = dataFetch (GetShare sid)
 getShareByName un                      = dataFetch (GetShareByName un)
 countShare                             = dataFetch CountShare
