@@ -78,9 +78,8 @@ toPatchResult (patchScore, patchCount, sid) = PatchResult { getPatchScore   = ce
 
 statisticShareHistoryList :: Int64 -> Int64 -> From -> Size -> OrderBy
                           -> TablePrefix -> Connection -> IO [PatchResult]
-statisticShareHistoryList start end from size o prefix conn = do
-  ret <- query conn sql (start, end, from, size)
-  return $ map toPatchResult ret
+statisticShareHistoryList start end from size o prefix conn =
+  map toPatchResult <$> query conn sql (start, end, from, size)
   where sql = fromString $ concat [ "SELECT SUM(`score`) as patch_score,COUNT(`share_id`) as patch_count,`share_id` "
                                   , "FROM `", prefix, "_share_history` "
                                   , "WHERE `created_at` > ? AND `created_at` < ? "

@@ -41,8 +41,7 @@ createShare name fid prefix conn = do
                                   ]
 
 updateShare :: ShareID -> ShareID -> TablePrefix -> Connection -> IO ()
-updateShare sid fid prefix conn = do
-  void $ execute conn sql (fid, sid)
+updateShare sid fid prefix conn = void $ execute conn sql (fid, sid)
 
   where sql = fromString $ concat [ "UPDATE `", prefix, "_shares` "
                                   , "SET `father_id` = ? "
