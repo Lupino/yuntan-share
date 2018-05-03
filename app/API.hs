@@ -76,7 +76,7 @@ program Options { getConfigFile  = confFile
 
   let state = stateSet (initShareState mysqlThreads) stateEmpty
 
-  let u = simpleEnv pool prefix
+  let u = simpleEnv pool prefix ()
 
   let opts = def { settings = setPort port
                             $ setHost (Host host) (settings def) }
