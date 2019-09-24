@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-10.2
+resolver: lts-14.6
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -37,10 +37,9 @@ resolver: lts-10.2
 # will not be run. This is useful for tweaking upstream packages.
 packages:
 - '.'
-- location:
-    git: https://github.com/Lupino/yuntan-common.git
-    commit: 2ec5bf2176f327da715016ee4d93cc317870b9d5
-  extra-dep: true
+extra-deps:
+- git: https://github.com/Lupino/yuntan-common.git
+  commit: d33d75348877c1339b34e20abcff6ed4df567adf
   subdirs:
   - yuntan-common-scotty
   - yuntan-common-scotty-type
@@ -50,10 +49,8 @@ packages:
   - yuntan-common-result
   - yuntan-common-json
   - yuntan-common-order
-- location:
-    git: https://github.com/jdnavarro/graphql-haskell.git
-    commit: 40f9024b51900c73bc0f65444c16022bd73820be
-  extra-dep: true
+- git: https://github.com/jdnavarro/graphql-haskell.git
+  commit: 40f9024b51900c73bc0f65444c16022bd73820be
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 # extra-deps:

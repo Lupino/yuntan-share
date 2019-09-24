@@ -38,7 +38,7 @@ import           Share.GraphQL           (schema)
 
 
 -- POST /api/shares/
-createShareHandler :: HasMySQL u => ActionH u ()
+createShareHandler :: HasMySQL u => ActionH u w ()
 createShareHandler = do
   name <- param "name"
   fname <- param "sharename"
@@ -50,7 +50,7 @@ createShareHandler = do
       createShareHandler' name fid
     Just Share{getShareID = fid} -> createShareHandler' name fid
 
-createShareHandler' :: HasMySQL u => UserName -> ShareID -> ActionH u ()
+createShareHandler' :: HasMySQL u => UserName -> ShareID -> ActionH u w ()
 createShareHandler' name fid = do
   old <- lift $ getShareByName name
   case old of
@@ -67,7 +67,7 @@ createShareHandler' name fid = do
 
 
 -- POST /api/shares/:name/hists/
-createShareHistoryHandler :: HasMySQL u => ActionH u ()
+createShareHistoryHandler :: HasMySQL u => ActionH u w ()
 createShareHistoryHandler = do
   score <- param "score"
   sm <- param "summary"
@@ -84,7 +84,7 @@ createShareHistoryHandler = do
         getFatherList Nothing                                  = []
         getFatherList (Just Share{getShareFather = father}) = father : getFatherList father
 
-        calcShareScore :: HasMySQL u => Score -> Share -> GenHaxl u Share
+        calcShareScore :: HasMySQL u => Score -> Share -> GenHaxl u w Share
         calcShareScore ref share = do
           ratio <- fromMaybe 0.0 <$> getConfig ("ratio_" ++ show depth)
           let patchScore = ceiling $ fromIntegral ref * ratio
@@ -98,7 +98,7 @@ createShareHistoryHandler = do
                 score = getShareTotalScore share
                 patchCount = getSharePatchCount share
 
-        saveHistory :: HasMySQL u => ShareID -> Summary -> Share -> GenHaxl u ()
+        saveHistory :: HasMySQL u => ShareID -> Summary -> Share -> GenHaxl u w ()
         saveHistory rid sm share =
           when (score > 0) $ do
             void $ incrShareScore fid score
@@ -110,7 +110,7 @@ createShareHistoryHandler = do
                 depth = getShareDepth share
 
 -- POST /api/config/:key/
-saveConfigHandler :: HasMySQL u => ActionH u ()
+saveConfigHandler :: HasMySQL u => ActionH u w ()
 saveConfigHandler = do
   key <- param "key"
   value <- param "value"
@@ -118,18 +118,18 @@ saveConfigHandler = do
   resultOK
 
 -- GET /api/config/:key/
-getConfigHandler :: HasMySQL u => ActionH u ()
+getConfigHandler :: HasMySQL u => ActionH u w ()
 getConfigHandler = do
   key <- param "key"
   value <- lift $ getConfig_ key
   ok "value" value
 
 -- GET /api/shares/:name/
-getShareHandler :: HasMySQL u => ActionH u ()
+getShareHandler :: HasMySQL u => ActionH u w ()
 getShareHandler = maybeNotFound "Share" =<< paramShare'
 
 -- GET /api/shares/:name/childs/
-getShareChildrenHandler :: HasMySQL u => ActionH u ()
+getShareChildrenHandler :: HasMySQL u => ActionH u w ()
 getShareChildrenHandler = do
   (from, size) <- paramPage
   share <- paramShare
@@ -145,7 +145,7 @@ getShareChildrenHandler = do
                                        }
 
 -- GET /api/shares/:name/hists/
-getShareHistoryHandler :: HasMySQL u => ActionH u ()
+getShareHistoryHandler :: HasMySQL u => ActionH u w ()
 getShareHistoryHandler = do
   from <- param "from" `rescue` (\_ -> return (0::From))
   size <- param "size" `rescue` (\_ -> return (10::Size))
@@ -166,17 +166,17 @@ getShareHistoryHandler = do
                                       }
 
 -- GET /api/shares/:name/patch/
-getSharePatchHandler :: HasMySQL u => ActionH u ()
+getSharePatchHandler :: HasMySQL u => ActionH u w ()
 getSharePatchHandler = do
   share <- paramShare
-  startTime <- param "start_time" `rescue` (\_ -> return 0) :: ActionH u Int64
-  endTime <- param "end_time" `rescue` (\_ -> liftIO $ read . show . toEpochTime <$> getUnixTime) :: ActionH u Int64
+  startTime <- param "start_time" `rescue` (\_ -> return 0) :: ActionH u w Int64
+  endTime <- param "end_time" `rescue` (\_ -> liftIO $ read . show . toEpochTime <$> getUnixTime) :: ActionH u w Int64
   case share of
     Nothing -> shareNotFound
     Just Share{getShareID = fid} -> json =<< lift (statisticShareHistory fid startTime endTime)
 
 -- GET /api/shares/
-getShareListHandler :: HasMySQL u => ActionH u ()
+getShareListHandler :: HasMySQL u => ActionH u w ()
 getShareListHandler = do
   from <- param "from" `rescue` (\_ -> return (0::From))
   size <- param "size" `rescue` (\_ -> return (10::Size))
@@ -194,11 +194,11 @@ getShareListHandler = do
                                    }
 
 -- GET /api/statistic/
-getStatisticShareHistoryHandler :: HasMySQL u => ActionH u ()
+getStatisticShareHistoryHandler :: HasMySQL u => ActionH u w ()
 getStatisticShareHistoryHandler = do
   (from, size) <- paramPage
-  startTime <- param "start_time" `rescue` (\_ -> return 0) :: ActionH u Int64
-  endTime <- param "end_time" `rescue` (\_ -> liftIO $ read . show . toEpochTime <$> getUnixTime) :: ActionH u Int64
+  startTime <- param "start_time" `rescue` (\_ -> return 0) :: ActionH u w Int64
+  endTime <- param "end_time" `rescue` (\_ -> liftIO $ read . show . toEpochTime <$> getUnixTime) :: ActionH u w Int64
 
   patchs <- lift $ do
     shs <- statisticShareHistoryList startTime endTime from size (desc "patch_score")
@@ -214,30 +214,30 @@ getStatisticShareHistoryHandler = do
                                    , getResult = patchs
                                    }
 
-paramShare :: HasMySQL u => ActionH u (Maybe Share)
+paramShare :: HasMySQL u => ActionH u w (Maybe Share)
 paramShare = do
   name <- param "name"
   lift $ getShareByName name
 
-paramShare' :: HasMySQL u => ActionH u (Maybe Share)
+paramShare' :: HasMySQL u => ActionH u w (Maybe Share)
 paramShare' = do
   name <- param "name"
   maxDepth <- lift $ fromMaybe 0 <$> getConfig "max_depth"
   lift (fillFather 0 maxDepth =<< getShareByName name)
 
-resultOK :: ActionH u ()
+resultOK :: ActionH u w ()
 resultOK = ok "result" ("OK" :: String)
 
-shareNotFound :: ActionH u ()
+shareNotFound :: ActionH u w ()
 shareNotFound = errNotFound "Share not found."
 
-paramPage :: ActionH u (From, Size)
+paramPage :: ActionH u w (From, Size)
 paramPage = do
   from <- param "from" `rescue` (\_ -> return (0::From))
   size <- param "size" `rescue` (\_ -> return (10::Size))
   return (from, size)
 
-graphqlHandler :: HasMySQL u => ActionH u ()
+graphqlHandler :: HasMySQL u => ActionH u w ()
 graphqlHandler = do
   query <- param "query"
   json =<< lift (graphql schema query)

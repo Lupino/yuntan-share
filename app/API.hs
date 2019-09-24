@@ -84,12 +84,12 @@ program Options { getConfigFile  = confFile
   _ <- runIO u state createTable
   scottyOptsT opts (runIO u state) application
   where
-        runIO :: HasMySQL u => u -> StateStore -> GenHaxl u b -> IO b
+        runIO :: HasMySQL u => u -> StateStore -> GenHaxl u w b -> IO b
         runIO env s m = do
           env0 <- initEnv s env
           runHaxl env0 m
 
-application :: HasMySQL u => ScottyH u ()
+application :: HasMySQL u => ScottyH u w ()
 application = do
   middleware logStdout
 

@@ -65,22 +65,22 @@ import           Yuntan.Utils.GraphQL  (getIntValue)
 --    share: Share
 --  }
 
-schema :: HasMySQL u => Schema (GenHaxl u)
+schema :: HasMySQL u => Schema (GenHaxl u w)
 schema = config :| [share, statistic, statisticCount, shares, shareCount]
 
-config :: HasMySQL u => Resolver (GenHaxl u)
+config :: HasMySQL u => Resolver (GenHaxl u w)
 config = scalarA "config" $ \case
   (Argument "name" (ValueString name):_) -> getConfig_ $ unpack name
   (Argument "name" (ValueEnum name):_)   -> getConfig_ $ unpack name
   _ -> empty
 
-share :: HasMySQL u => Resolver (GenHaxl u)
+share :: HasMySQL u => Resolver (GenHaxl u w)
 share = objectA' "share" $ \case
   (Argument "name" (ValueString name):_) -> maybe [] share_ <$> getShareByName name
   (Argument "name" (ValueEnum name):_)   -> maybe [] share_ <$> getShareByName name
   _ -> empty
 
-share_ :: HasMySQL u => Share -> [Resolver (GenHaxl u)]
+share_ :: HasMySQL u => Share -> [Resolver (GenHaxl u w)]
 share_ Share {..} = [ scalar        "id"             getShareID
                     , scalar        "name"           getShareName
                     , scalar        "father_id"      getShareFatherID
@@ -96,29 +96,29 @@ share_ Share {..} = [ scalar        "id"             getShareID
                     , scalar        "created_at"     getShareCreatedAt
                     ]
 
-father :: HasMySQL u => Name -> ShareID -> Resolver (GenHaxl u)
+father :: HasMySQL u => Name -> ShareID -> Resolver (GenHaxl u w)
 father n fid = object' n $ maybe [] share_ <$> getShare fid
 
-children :: HasMySQL u => Name -> ShareID -> Resolver (GenHaxl u)
+children :: HasMySQL u => Name -> ShareID -> Resolver (GenHaxl u w)
 children n fid = arrayA' n $ \ argv -> do
   let from = fromMaybe 0  $ getIntValue "from" argv
       size = fromMaybe 10 $ getIntValue "size" argv
 
   map share_ <$> getShareListByFather fid from size (desc "id")
 
-childrenCount :: HasMySQL u => Name -> ShareID -> Resolver (GenHaxl u)
+childrenCount :: HasMySQL u => Name -> ShareID -> Resolver (GenHaxl u w)
 childrenCount n fid = scalarA n $ \case
   [] -> countShareByFather fid
   _ -> empty
 
-history :: HasMySQL u => Name -> ShareID -> Resolver (GenHaxl u)
+history :: HasMySQL u => Name -> ShareID -> Resolver (GenHaxl u w)
 history n fid = arrayA' n $ \ argv -> do
   let from = fromMaybe 0  $ getIntValue "from" argv
       size = fromMaybe 10 $ getIntValue "size" argv
 
   map record <$> getShareHistoryList fid from size (desc "id")
 
-record :: HasMySQL u => ShareHistory -> [Resolver (GenHaxl u)]
+record :: HasMySQL u => ShareHistory -> [Resolver (GenHaxl u w)]
 record ShareHistory {..} = [ scalar "id"         getHistID
                            , scalar "share_id"   getHistSID
                            , father "share"      getHistSID
@@ -130,26 +130,26 @@ record ShareHistory {..} = [ scalar "id"         getHistID
                            , scalar "created_at" getHistCreatedAt
                            ]
 
-historyCount :: HasMySQL u => Name -> ShareID -> Resolver (GenHaxl u)
+historyCount :: HasMySQL u => Name -> ShareID -> Resolver (GenHaxl u w)
 historyCount n fid = scalarA n $ \case
   [] -> countShareHistory fid
   _ -> empty
 
-patch :: HasMySQL u => Name -> ShareID -> Resolver (GenHaxl u)
+patch :: HasMySQL u => Name -> ShareID -> Resolver (GenHaxl u w)
 patch n fid = objectA' n $ \ argv -> do
   endTime <- flip fromMaybe (getIntValue "end_time" argv) <$> now
   let startTime = fromMaybe 0 $ getIntValue "start_time" argv
 
   patch_ <$> statisticShareHistory fid startTime endTime
 
-patch_ :: HasMySQL u => PatchResult -> [Resolver (GenHaxl u)]
+patch_ :: HasMySQL u => PatchResult -> [Resolver (GenHaxl u w)]
 patch_ PatchResult {..} = [ scalar "patch_score" getPatchScore
                           , scalar "patch_count" getPatchCount
                           , scalar "share_id"    getPatchShareID
                           , father "share"       getPatchShareID
                           ]
 
-statistic :: HasMySQL u => Resolver (GenHaxl u)
+statistic :: HasMySQL u => Resolver (GenHaxl u w)
 statistic = arrayA' "statistic" $ \ argv -> do
   endTime <- flip fromMaybe (getIntValue "end_time" argv) <$> now
   let startTime = fromMaybe 0 $ getIntValue "start_time" argv
@@ -158,23 +158,23 @@ statistic = arrayA' "statistic" $ \ argv -> do
 
   map patch_ <$> statisticShareHistoryList startTime endTime from size (desc "patch_score")
 
-statisticCount :: HasMySQL u => Resolver (GenHaxl u)
+statisticCount :: HasMySQL u => Resolver (GenHaxl u w)
 statisticCount = scalarA "statistic_count" $ \ argv -> do
   endTime <- flip fromMaybe (getIntValue "end_time" argv) <$> now
   let startTime = fromMaybe 0 $ getIntValue "start_time" argv
 
   countStatisticShareHistory startTime endTime
 
-shares :: HasMySQL u => Resolver (GenHaxl u)
+shares :: HasMySQL u => Resolver (GenHaxl u w)
 shares = arrayA' "shares" $ \ argv -> do
   let from = fromMaybe 0  $ getIntValue "from" argv
       size = fromMaybe 10 $ getIntValue "size" argv
   map share_ <$> getShareList from size (desc "id")
 
-shareCount :: HasMySQL u => Resolver (GenHaxl u)
+shareCount :: HasMySQL u => Resolver (GenHaxl u w)
 shareCount = scalarA "share_count" $ \ case
   [] -> countShare
   _  -> empty
 
-now :: Read a => (GenHaxl u) a
+now :: Read a => (GenHaxl u w) a
 now = unsafeLiftIO $ read . show . toEpochTime <$> getUnixTime
